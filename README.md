@@ -1,8 +1,13 @@
-# SpmImageTycoonInstaller
+<p align="center">
+  <img width="100" height="100" src="res/logo_diamond_animated.svg?raw=true" />
+</p>
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://alexriss.github.io/SpmImageTycoonInstaller.jl/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://alexriss.github.io/SpmImageTycoonInstaller.jl/dev/)
+# Installer for SpmImage Tycoon
+
+Installer for the world-famous [SpmImage Tycoon](https://github.com/alexriss/SpmImageTycoon.jl) (a cross-platform app to manage and edit scanning probe microscopy (SPM) images and spectra).
+
 [![Build Status](https://github.com/alexriss/SpmImageTycoonInstaller.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/alexriss/SpmImageTycoonInstaller.jl/actions/workflows/CI.yml?query=branch%3Amaster)
 [![Coverage](https://codecov.io/gh/alexriss/SpmImageTycoonInstaller.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/alexriss/SpmImageTycoonInstaller.jl)
-[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
-[![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
+
+This package is in development and not ready for use yet. Please check back soon.
+
