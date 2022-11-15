@@ -1,0 +1,13 @@
+name = "SpmImageTycoonInstaller"
+uuid = "306e248c-d22f-4909-81db-ed3c44a8c0e1"
+authors = ["Alex Riss"]
+version = "0.1.0"
+
+[compat]
+julia = "1.8"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
