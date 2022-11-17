@@ -53,30 +53,50 @@ end
 Adds shortcuts to Start Menu and Desktop.
 """
 function add_shortcuts(s::Set{Shortcuts}, dir_target::String)::Dict{String,Any}
-    d = Dict{String,Any}()
+    d = Dict{String,Any}("num" => length(s))
 
     length(s) > 0 && println("\n")
 
     if ShortcutStart in s
         println(@italic "Adding Start Menu shortcut.")
+        p = ""
+        spath = ""
+        sicon = ""
+
         if Sys.iswindows()
 
         end
         if Sys.islinux() && isdir(linux_startmenu_dir)
             p = joinpath(linux_startmenu_dir, linux_startmenu_path)
+            sicon = joinpath(dir_target, linux_icon_path)
+            spath = joinpath(dir_target, linux_executable_path)
             c = linux_startmenu_content
-            c = replace(c, "{{ icon }}" => joinpath(dir_target, linux_icon_path))
-            c = replace(c, "{{ path }}" => joinpath(dir_target, linux_executable_path))
+            c = replace(c, "{{ icon }}" => sicon)
+            c = replace(c, "{{ path }}" => spath)
             open(p, "w") do io
                 println(io, c)
             end
         end
+        d["StartMenu"] = Dict{String,Any}(
+            "shortcut" => p,
+            "path" => spath,
+            "icon" => sicon,
+        )
     end
 
     if ShortcutDesktop in s
         println(@italic "Adding Desktop shortcut.")
+        p = ""
+        spath = ""
+        sicon = ""
+
         if Sys.iswindows()
         end
+        d["Desktop"] = Dict{String,Any}(
+            "shortcut" => p,
+            "path" => spath,
+            "icon" => sicon,
+        )
     end
 
     return d
@@ -89,15 +109,15 @@ end
 Test run function for adding shortcuts.
 """
 function add_shortcuts_sim(s::Set{Shortcuts})::Dict{String,Any}
-    d = Dict{String,Any}()
+    d = Dict{String,Any}("num" => length(s))
 
     length(s) > 0 && println("\n")
 
     if ShortcutStart in s
         println(@italic "Adding Start Menu shortcut.")
-        d["Start Menu"] = Dict(
-            "location" => "...",
-            "target" => "...",
+        d["StartMenu"] = Dict(
+            "shortcut" => "...",
+            "path" => "...",
             "icon" => "...",
         )
     end
@@ -105,8 +125,8 @@ function add_shortcuts_sim(s::Set{Shortcuts})::Dict{String,Any}
     if ShortcutDesktop in s
         println(@italic "Adding Desktop shortcut.")
         d["Desktop"] = Dict(
-            "location" => "...",
-            "target" => "...",
+            "shortcut" => "...",
+            "path" => "...",
             "icon" => "...",
         )
     end

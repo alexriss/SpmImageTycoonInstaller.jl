@@ -115,7 +115,7 @@ Copies icons to bin directory.
 """
 function copy_icons(dir_source::String, dir_target::String)::Nothing
     for (s, t) in zip(icon_sources, icon_targets)
-        cp(joinpath(dir_source, icon_sources), joinpath(dir_target, icon_targets))
+        cp(joinpath(dir_source, s), joinpath(dir_target, t))
     end
     return nothing
 end
@@ -152,8 +152,8 @@ function compile_app(dir_target::String; dev_version::Bool=false)::Tuple{String,
     else
         Pkg.add("SpmImageTycoon")
     end
-    dir_source = get_package_dir()
 
+    dir_source = get_package_dir()
     try
         create_app(dir_source, dir_target, incremental=false, filter_stdlibs=true, include_lazy_artifacts=true, force=true)
         copy_icons(dir_source, dir_target)
@@ -311,14 +311,18 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
     end
 
     data = Dict{String,Any}(
-        "date start" => DATE_install,
-        "date end" => Dates.now(),
+        "date_start" => DATE_install,
+        "date_end" => Dates.now(),
         "target" => dir_target,
-        "SpmImageTycoon version" => version_tycoon,
-        "SpmImages version" => version_spmimages,
-        "SpmSpectroscopy version" => version_spmspectroscopy,
-        "Installer version" => string(VERSION),
-        "shortcuts" => data_shortcuts
+        "version" => string(VERSION),
+        "interactive" => interactive,
+        "dev_version" => dev_version,
+        "shortcuts" => data_shortcuts,
+        "packages" => Dict{String,Any}(
+            "SpmImageTycoon" => version_tycoon,
+            "SpmImages" => version_spmimages,
+            "SpmSpectroscopy" => version_spmspectroscopy,
+        )
     )
     save_info_log(data)
 
