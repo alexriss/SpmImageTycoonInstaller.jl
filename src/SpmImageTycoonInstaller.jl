@@ -11,6 +11,10 @@ export install
 
 const VERSION = VersionNumber(TOML.parsefile(joinpath(@__DIR__, "../Project.toml"))["version"]) 
 
+
+const icon_sources = ("res/media/logo_diamond.svg", "res/media/logo_diamond.png", "res/media/logo_diamond.ico")
+const icon_targets= ("bin/SpmImageTycoon.svg", "bin/SpmImageTycoon.png", "bin/SpmImageTycoon.ico")
+
 global DATE_install::DateTime=Dates.now()
 
 @enum Shortcuts ShortcutStart ShortcutDesktop
@@ -106,6 +110,19 @@ end
 
 
 """
+    copy_icons(dir_source::String, dir_target::String)::Nothing
+
+Copies icons to bin directory.
+"""
+function copy_icons(dir_source::String, dir_target::String)::Nothing
+    for (s, t) in zip(icon_sources, icon_targets)
+        cp(joinpath(dir_source, icon_sources), joinpath(dir_target, icon_targets))
+    end
+    return nothing
+end
+
+
+"""
     compile_app(dir_target::String)::Tuple{String,String}
 
 Runs the package compilation and returns an error message in case of an error. STDOUT is redirected into the global varible OUT.
@@ -136,6 +153,7 @@ function compile_app(dir_target::String)::Tuple{String,String}
 
     try
         create_app(dir_source, dir_target, incremental=false, filter_stdlibs=true, include_lazy_artifacts=true, force=true)
+        copy_icons(dir_source, dir_target)
     catch e
         err = sprint(showerror, e)
         err_full = sprint(showerror, e, catch_backtrace())
@@ -257,6 +275,7 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true)::
     println("\n\n")
 
     dir_target = (dir == "") ? get_default_install_dir() : dir
+    shortcuts = Set{Shortcuts}([ShortcutStart, ShortcutDesktop])
     if interactive
         dir_target = choose_install_dir(dir_target)
         shortcuts = choose_startmenu_shortcuts()
@@ -269,8 +288,14 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true)::
 
     if test_run
         data_shortcuts = add_shortcuts_sim(shortcuts)
+        version_tycoon = "..."
+        version_spmimages = "..."
+        version_spmspectroscopy = "..."
     else
-        data_shortcuts = add_shortcuts(shortcuts)
+        data_shortcuts = add_shortcuts(shortcuts, dir_target)
+        version_tycoon = TOML.parsefile(joinpath(get_package_dir(), "Project.toml"))["version"]
+        version_spmimages = TOML.parsefile(joinpath(get_package_dir("SpmImages"), "Project.toml"))["version"]
+        version_spmspectroscopy = TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"],
         Pkg.activate()
     end
 
@@ -278,9 +303,9 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true)::
         "date start" => DATE_install,
         "date end" => Dates.now(),
         "target" => dir_target,
-        "SpmImageTycoon version" => TOML.parsefile(joinpath(get_package_dir(), "Project.toml"))["version"],
-        "SpmImages version" => TOML.parsefile(joinpath(get_package_dir("SpmImages"), "Project.toml"))["version"],
-        "SpmSpectroscopy version" => TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"],
+        "SpmImageTycoon version" => version_tycoon,
+        "SpmImages version" => version_spmimages,
+        "SpmSpectroscopy version" => version_spmspectroscopy,
         "Installer version" => string(VERSION),
         "shortcuts" => data_shortcuts
     )
