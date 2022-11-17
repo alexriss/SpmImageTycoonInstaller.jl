@@ -45,7 +45,7 @@ end
 
 Saves the install info log.
 """
-function save_info_log(data::Dict{Any,Any})::Nothing
+function save_info_log(data::Dict{String,Any})::Nothing
     open(get_info_filename(), "w") do io
         TOML.print(io, data)
     end

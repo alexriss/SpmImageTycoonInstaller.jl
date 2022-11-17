@@ -52,12 +52,15 @@ end
 
 
 """
-    get_package_dir()::String
+    get_package_dir(name::String="")::String
 
-Returns package directory for SpmImageTycoon.
+Returns package directory for a certain package. Is no `name` is given, returns the `SpmImageTycoon` directory.
 """
-function get_package_dir()::String
-    return joinpath(Base.find_package("SpmImageTycoon"), "../..")
+function get_package_dir(name::String="")::String
+    if name == ""
+        name = "SpmImageTycoon"
+    end
+    return joinpath(Base.find_package(name), "../..")
 end
 
 
@@ -99,42 +102,6 @@ function choose_install_dir(dir::String)::String
     end
 
     return abspath(dir)
-end
-
-
-"""
-    choose_startmenu_shortcuts()::Set{Shortcuts}
-
-Let's the user choose whether to add startmenu and desktop shortcuts.
-"""
-function choose_startmenu_shortcuts()::Set{Shortcuts}
-    s = Set{Shortcuts}()
-
-    println()
-
-    # Start menu
-    if Sys.iswindows() || (Sys.islinux() && isdir("~/.local/share/applications/"))
-        print("Add Start Menu shortcut [Y/n]: ")
-        i = lowercase(readline())
-        if i == "y"
-            push!(s, ShortcutStart)
-        end
-    end
-
-    # Desktop
-    if Sys.iswindows()
-        print("Add Desktop shortcut [Y/n]: ")
-        i = lowercase(readline())
-        if i == "y"
-            push!(s, ShortcutDesktop)
-        end
-    end
-
-    if Sys.isapple()
-        pass # todo
-    end
-
-    return s
 end
 
 
@@ -300,21 +267,29 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true)::
 
     errors_occured = wrapper_compile_app(dir_target, test_run=test_run)
 
+    if test_run
+        data_shortcuts = add_shortcuts_sim(shortcuts)
+    else
+        data_shortcuts = add_shortcuts(shortcuts)
+        Pkg.activate()
+    end
+
+    data = Dict{String,Any}(
+        "date start" => DATE_install,
+        "date end" => Dates.now(),
+        "target" => dir_target,
+        "SpmImageTycoon version" => TOML.parsefile(joinpath(get_package_dir(), "Project.toml"))["version"],
+        "SpmImages version" => TOML.parsefile(joinpath(get_package_dir("SpmImages"), "Project.toml"))["version"],
+        "SpmSpectroscopy version" => TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"],
+        "Installer version" => string(VERSION),
+        "shortcuts" => data_shortcuts
+    )
+    save_info_log(data)
+
     if !errors_occured
         println("\n\n")
         println(Panel("Installation complete. Enjoy SpmImage Tycoon."; width = 66, justify = :center))
         println()
-    end
-
-    if !test_run
-        data_shortcuts = add_shortcuts(shortcuts)
-        data = Dict(
-            "date" => DATE_install,
-            "target" => dir_target,
-            "shortcuts" => data_shortcuts
-        )
-        save_info_log(data)
-        Pkg.activate()
     end
 
     return nothing
