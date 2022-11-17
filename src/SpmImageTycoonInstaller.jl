@@ -11,7 +11,7 @@ export install
 
 const VERSION = VersionNumber(TOML.parsefile(joinpath(@__DIR__, "../Project.toml"))["version"]) 
 
-
+const dev_url = "https://github.com/alexriss/SpmImageTycoon.jl"
 const icon_sources = ("res/media/logo_diamond.svg", "res/media/logo_diamond.png", "res/media/logo_diamond.ico")
 const icon_targets= ("bin/SpmImageTycoon.svg", "bin/SpmImageTycoon.png", "bin/SpmImageTycoon.ico")
 
@@ -74,8 +74,7 @@ end
 Let's the user choose a installation directory.
 """
 function choose_install_dir(dir::String)::String
-    println("Please choose the installation directory.")
-    println("(Make sure you have sufficient write privileges).\n")
+    println("Choose the installation directory.")
     println("Default directory is \"$dir\".")
     println("Press ENTER to keep this default.\n")
     
@@ -123,11 +122,11 @@ end
 
 
 """
-    compile_app(dir_target::String)::Tuple{String,String}
+    compile_app(dir_target::String, dev_version::Bool=false)::Tuple{String,String}
 
 Runs the package compilation and returns an error message in case of an error. STDOUT is redirected into the global varible OUT.
 """
-function compile_app(dir_target::String)::Tuple{String,String}
+function compile_app(dir_target::String; dev_version::Bool=false)::Tuple{String,String}
     err = ""
     err_full = ""
 
@@ -148,7 +147,11 @@ function compile_app(dir_target::String)::Tuple{String,String}
     end
 
     Pkg.activate(temp=true)
-    Pkg.add("SpmImageTycoon")
+    if dev_version
+        Pkg.add(url=dev_url)
+    else
+        Pkg.add("SpmImageTycoon")
+    end
     dir_source = get_package_dir()
 
     try
@@ -204,11 +207,11 @@ function compile_app_sim(return_error::Bool=false)::Tuple{String,String}
     println("""Precompiling project...""")
     sleep(0.5)
     println("""163 dependencies successfully precompiled in 419 seconds""")
-    sleep(1.5)
+    sleep(1.)
     println("""[08m:40s] PackageCompiler: compiling nonincremental system image""")
-    sleep(1.5)
+    sleep(1.)
     println("""[08m:40s] PackageCompiler: compiling nonincremental system image""")
-    sleep(1.5)
+    sleep(1.)
     println("""✔ [08m:40s] PackageCompiler: compiling nonincremental system image""")
 
     if return_error
@@ -220,11 +223,11 @@ end
 
 
 """
-    wrapper_compile_app(dir_target::String; test_run::Bool=false)::Bool
+    wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false)::Bool
 
 Wrapper that runs the `compile_app` function asynchronosly and updates the progress bar.
 """
-function wrapper_compile_app(dir_target::String; test_run::Bool=false)::Bool
+function wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false)::Bool
     out_stdout = stdout
     out_stderr = stderr
 
@@ -233,7 +236,7 @@ function wrapper_compile_app(dir_target::String; test_run::Bool=false)::Bool
     if test_run
         compile_task = @task compile_app_sim()
     else
-        compile_task = @task compile_app(dir_target)
+        compile_task = @task compile_app(dir_target, dev_version=dev_version)
     end
 
     out_file1 = open(out_filename1, "w")
@@ -264,15 +267,22 @@ end
 
 
 """
-    install(dir::String=""; test_run::Bool=false, interactive::Bool=true)::Nothing
+    install(dir::String=""; test_run::Bool=false, interactive::Bool=true, dev_version::Bool=false)::Nothing
 
 Installs SpmImageTycoon.
+
+A specific directory can be directly given as `dir`.
+If `test_run` is `true`, then installation will only be simulated and compilation will be skipped.
+If `interactive` is `false`, then the install will proceed without user interaction.
+If `dev_version` is `true`, then the experimental development version of `SpmImageTycoon` will be installed.
 """
-function install(dir::String=""; test_run::Bool=false, interactive::Bool=true)::Nothing
+function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, dev_version::Bool=false)::Nothing
     Term.Consoles.clear()
     println()
     print(Panel("Welcome to the installation of $(@bold "SpmImage Tycoon")."; width=66, justify=:center, style="gold1", box=:DOUBLE))
-    println("\n\n")
+    println("\n")
+
+    println("Please make sure that you have an active internet connection.\n")
 
     dir_target = (dir == "") ? get_default_install_dir() : dir
     shortcuts = Set{Shortcuts}([ShortcutStart, ShortcutDesktop])
@@ -282,9 +292,10 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true)::
     end
 
     global DATE_install = Dates.now()
+    dev_version && println("\nUsing development version of SpmImage Tycoon.")
     println("\nInstalling into directory \"$(dir_target)\".\nPlease have a beverage.\n")
 
-    errors_occured = wrapper_compile_app(dir_target, test_run=test_run)
+    errors_occured = wrapper_compile_app(dir_target, test_run=test_run, dev_version=dev_version)
 
     if test_run
         data_shortcuts = add_shortcuts_sim(shortcuts)
