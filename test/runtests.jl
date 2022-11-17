@@ -1,4 +1,5 @@
 using SpmImageTycoonInstaller
+using Suppressor
 using Test
 
 @testset "SpmImageTycoonInstaller.jl" begin
@@ -6,12 +7,9 @@ using Test
 
     out = Pipe()
     err = Pipe()
-    redirect_stdio(;stdout=out, stderr=err) do
-        # install(;test_run=true, test_run_quick=true)
-    end
-    res = read(out, String)
-    #@show res
-    #@test contains(res, "beverage")
-    #@show read(err, String)
+    res = @capture_out install(;test_run=true, test_run_quick=true, interactive=false)
     
+    @test contains(res, "beverage")
+    @test contains(res, "complete")
+    @test contains(res, "Enjoy")
 end
