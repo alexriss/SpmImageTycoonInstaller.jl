@@ -101,13 +101,34 @@ end
 
 
 """
-    compile_app(dir_source::String, dir_target::String)::Tuple{String,String}
+    compile_app(dir_target::String)::Tuple{String,String}
 
 Runs the package compilation and returns an error message in case of an error. STDOUT is redirected into the global varible OUT.
 """
-function compile_app(dir_source::String, dir_target::String)::Tuple{String,String}
+function compile_app(dir_target::String)::Tuple{String,String}
     err = ""
     err_full = ""
+
+    if isdir(dir_target)
+        i = 1
+        while i <=5
+            try
+                rm(dir_target, force=true, recursive=true)
+            catch e  # can occur when directory is busy or no write privileges
+                err = sprint(showerror, e)
+                err_full = sprint(showerror, e, catch_backtrace())
+            end
+            isdir(dir_target) || break
+            sleep(1)
+            i += 1
+        end
+        i == 6 && return err, err_full
+    end
+
+    Pkg.activate(temp=true)
+    Pkg.add("SpmImageTycoon")
+    dir_source = get_package_dir()
+
     try
         create_app(dir_source, dir_target, incremental=false, filter_stdlibs=true, include_lazy_artifacts=true, force=true)
     catch e
@@ -176,32 +197,35 @@ end
 
 
 """
-    wrapper_compile_app(dir_source::String, dir_target::String; test_run::Bool=false)::Bool
+    wrapper_compile_app(dir_target::String; test_run::Bool=false)::Bool
 
 Wrapper that runs the `compile_app` function asynchronosly and updates the progress bar.
 """
-function wrapper_compile_app(dir_source::String, dir_target::String; test_run::Bool=false)::Bool
+function wrapper_compile_app(dir_target::String; test_run::Bool=false)::Bool
     out_stdout = stdout
+    out_stderr = stderr
     # global OUT = Pipe()
     # Base.link_pipe!(OUT; reader_supports_async = true, writer_supports_async = true)
 
-    out_filename = get_log_filename()
+    out_filename1, out_filename2 = get_log_filenames()
 
     if test_run
         compile_task = @task compile_app_sim()
     else
-        compile_task = @task compile_app(dir_source, dir_target)
+        compile_task = @task compile_app(dir_target)
     end
 
-    out_file = open(out_filename, "a")
-    redirect_stdio(;stdout=out_file)
+    out_file1 = open(out_filename1, "w")
+    out_file2 = open(out_filename2, "w")
+    redirect_stdio(;stdout=out_file1,stderr=out_file2)
     # buffer_redirect_task = @async write(OUT_buffer, OUT.in)
     
     schedule(compile_task)
-    update_progress(compile_task, out_file, out_filename, out_stdout)
+    update_progress(compile_task, out_file1, out_file2, out_filename1, out_filename2, out_stdout)
 
-    redirect_stdio(stdout=out_stdout)
-    close(out_file)
+    redirect_stdio(stdout=out_stdout, stderr=out_stderr)
+    close(out_file1)
+    close(out_file2)
     err, err_full = fetch(compile_task)
     
     errors_occured = false
@@ -221,28 +245,29 @@ end
 
 
 """
-    update_progress(compile_task::Task, out_redirect_stream::IOStream, out_redirect_filename::String, out_stdout::Any)::Nothing
+    update_progress(compile_task::Task, out_stream1::IOStream, out_stream2::IOStream, out_filename1::String, out_filename2::String, out_stdout::Any)::Nothing
 
 Analyzes the redirected STDOUT and updates the progress bar accordingly.
 """
-function update_progress(compile_task::Task, out_redirect_stream::IOStream, out_redirect_filename::String, out_stdout::Any)::Nothing
+function update_progress(compile_task::Task, out_stream1::IOStream, out_stream2::IOStream, out_filename1::String, out_filename2::String, out_stdout::Any)::Nothing
     # pbar, job = setup_progress_bar()
     date_last = Dates.now()
     
     step_number = 0
     while(!istaskdone(compile_task))
-        flush(out_redirect_stream)
-        out_str = read(out_redirect_filename, String)
+        flush(out_stream1)
+        flush(out_stream2)
+        out_str = read(out_filename1, String) * read(out_filename2, String)
 
-        if step_number >= 4
+        if step_number == 4
             if (Dates.now() - date_last) / Millisecond(1000) > 30
-                print(".")
+                print(out_stdout, ".")
                 date_last = Dates.now()
             end
         elseif (contains(out_str, "compiling base system image")) && step_number < 4
             print(out_stdout, @italic "Compiling.")
-            step_number = 4
             date_last = Dates.now()
+            step_number = 4
         elseif (contains(out_str, "bundled artifacts")) && step_number < 3
             println(out_stdout, @italic "Bundling.")
             step_number = 3
@@ -258,7 +283,6 @@ function update_progress(compile_task::Task, out_redirect_stream::IOStream, out_
         #     redirect_stdio(stdout=out_stdout) do
         #         update!(job)
         #         render(pbar)
-        #         flush(stdout)
         #     end
         # end
         sleep(1)
@@ -269,11 +293,11 @@ end
 
 
 """
-    install(dir::String=""; test_run::Bool=false, test_run_quick::Bool=false)::Nothing
+    install(dir::String=""; test_run::Bool=false, interactive::Bool=true)::Nothing
 
 Installs SpmImageTycoon.
 """
-function install(dir::String=""; test_run::Bool=false, test_run_quick::Bool=false, interactive::Bool=true)::Nothing
+function install(dir::String=""; test_run::Bool=false, interactive::Bool=true)::Nothing
     Term.Consoles.clear()
     println()
     print(Panel("Welcome to the installation of $(@bold "SpmImage Tycoon")."; width=66, justify=:center, style="gold1", box=:DOUBLE))
@@ -285,15 +309,9 @@ function install(dir::String=""; test_run::Bool=false, test_run_quick::Bool=fals
     end
     d = ""
 
-    if !test_run_quick
-        Pkg.activate(temp=true)
-        Pkg.add("SpmImageTycoon")
-        d = get_package_dir()
-    end
-
     println("\nInstalling into directory \"$t\".\nPlease have a beverage.\n")
 
-    errors_occured = wrapper_compile_app(d, t, test_run=test_run || test_run_quick)
+    errors_occured = wrapper_compile_app(t, test_run=test_run)
 
     if !errors_occured
         println("\n\n")
@@ -301,7 +319,7 @@ function install(dir::String=""; test_run::Bool=false, test_run_quick::Bool=fals
         println()
     end
 
-    if !test_run_quick
+    if !test_run
         Pkg.activate()
     end
 
@@ -317,15 +335,24 @@ function julia_main()::Cint
 end
 
 
+"""for testing, to remove"""
 function testr()
     stdout_ = stdout
+    #pbar, job = setup_progress_bar()
+    render(pbar)
     redirect_stdio(stdout=devnull) do
         println("test1")
-        redirect_stdio(stdout=stdout_) do
-            println("test2")
+        println("test2")
+        for i in 1:10
+            with(pbar) do
+                redirect_stdio(stdout=stdout_) do
+                    update!(job)
+                    render(pbar)
+                end
+            end
+            sleep(1)
         end
     end
 end
 
 end
-
