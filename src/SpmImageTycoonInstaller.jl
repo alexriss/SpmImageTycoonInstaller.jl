@@ -34,9 +34,9 @@ function get_default_install_dir()::String
     if Sys.iswindows()
         d = ENV["LOCALAPPDATA"]
     elseif Sys.islinux()
-        d = "~/.local/bin"
+        d = joinpath(homedir(), ".local/bin")
     elseif Sys.isapple()
-        d = "~/Applications"
+        d = joinpath(homedir(), "Applications")
     else
         d = "."
     end

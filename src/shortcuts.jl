@@ -1,4 +1,4 @@
-const linux_startmenu_dir::String = "~/.local/share/applications/"
+const linux_startmenu_dir::String = joinpath(homedir(), ".local/share/applications/")
 const linux_startmenu_path::String = "spmimagetycoon.desktop"
 const linux_executable_path::String = "bin/SpmImageTycoon"
 const linux_icon_path::String = "bin/SpmImageTycoon.svg"
