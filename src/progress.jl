@@ -26,23 +26,27 @@ function update_progress(compile_task::Task, out_stream1::IOStream, out_stream2:
         flush(out_stream2)
         out_str = read(out_filename1, String) * read(out_filename2, String)
 
-        if step_number == 4
+        if step_number >= 2
             if (Dates.now() - date_last) / Millisecond(1000) > 30
                 print(out_stdout, ".")
                 date_last = Dates.now()
             end
-        elseif (contains(out_str, "compiling base system image")) && step_number < 4
-            print(out_stdout, @italic "Compiling.")
+        end
+        if (contains(out_str, "compiling base system image")) && step_number < 4
+            print(out_stdout, @italic "\nCompiling.")
             date_last = Dates.now()
             step_number = 4
         elseif (contains(out_str, "bundled artifacts")) && step_number < 3
-            println(out_stdout, @italic "Bundling.")
+            print(out_stdout, @italic "\nBundling.")
+            date_last = Dates.now()
             step_number = 3
         elseif contains(out_str, "Activating new project") && step_number < 2
-            println(out_stdout, @italic "Getting package.")
+            print(out_stdout, @italic "\nGetting package.")
+            date_last = Dates.now()
             step_number = 2
         elseif step_number < 1
-            println(out_stdout, @italic "Setting up.")
+            print(out_stdout, @italic "Setting up.")
+            date_last = Dates.now()
             step_number = 1
         end
 

@@ -3,6 +3,7 @@ module SpmImageTycoonInstaller
 using Dates
 using PackageCompiler
 using Pkg
+using Sockets
 using Term
 using Term.Progress
 using TOML
@@ -14,6 +15,11 @@ const VERSION = VersionNumber(TOML.parsefile(joinpath(@__DIR__, "../Project.toml
 const dev_url = "https://github.com/alexriss/SpmImageTycoon.jl"
 const icon_sources = ("res/media/logo_diamond.svg", "res/media/logo_diamond.png", "res/media/logo_diamond.ico")
 const icon_targets= ("bin/SpmImageTycoon.svg", "bin/SpmImageTycoon.png", "bin/SpmImageTycoon.ico")
+
+const autohotkey_dir_source = "helpers/windows_tray"
+const autohotkey_dir_target= "windows_tray"
+const autohotkey_bat_target = "windows_tray/SpmImageTycoon.bat"
+const autohotkey_bat_content = "{{ executable }} --julia-args -t auto\ntimeout /t 60"
 
 global DATE_install::DateTime=Dates.now()
 
@@ -64,7 +70,7 @@ function get_package_dir(name::String="")::String
     if name == ""
         name = "SpmImageTycoon"
     end
-    return joinpath(Base.find_package(name), "../..")
+    return abspath(joinpath(Base.find_package(name), "../.."))
 end
 
 
@@ -122,6 +128,26 @@ end
 
 
 """
+    copy_autohotkey(dir_source::String, dir_target::String)::Nothing
+
+Copies autohotkey helpers to installation directory.
+"""
+function copy_autohotkey(dir_source::String, dir_target::String)::Nothing
+    if Sys.iswindows()
+        cp(joinpath(dir_source, autohotkey_dir_source), joinpath(dir_target, autohotkey_dir_target))
+
+        # we have to rewrite the .bat file to use the compiled file
+        c = autohotkey_bat_content
+        c = replace(c, "{{ executable }}" =>  abspath(joinpath(dir_target, win_executable_path)))
+        open(joinpath(dir_target, autohotkey_bat_target), "w") do io
+            println(io, c)
+        end
+    end
+    return nothing
+end
+
+
+"""
     compile_app(dir_target::String, dev_version::Bool=false)::Tuple{String,String}
 
 Runs the package compilation and returns an error message in case of an error. STDOUT is redirected into the global varible OUT.
@@ -157,6 +183,7 @@ function compile_app(dir_target::String; dev_version::Bool=false)::Tuple{String,
     try
         create_app(dir_source, dir_target, incremental=false, filter_stdlibs=true, include_lazy_artifacts=true, force=true)
         copy_icons(dir_source, dir_target)
+        copy_autohotkey(dir_source, dir_target)
     catch e
         err = sprint(showerror, e)
         err_full = sprint(showerror, e, catch_backtrace())
@@ -267,6 +294,35 @@ end
 
 
 """
+    basic_checks()::Bool
+
+Some basic checks before installation.
+"""
+function basic_checks()::Bool
+    try
+        Sockets.connect("github.com", 443)
+    catch
+        println(@bold "Error: No active internet connection detected.")
+        println("Please connect to the internet and run the installer again.")
+        return false
+    end
+
+    # we need `unzip` for Blink.jl installation on Linux
+    if Sys.islinux()
+        try
+            _ = read(`which unzip`, String);
+        catch
+            println(@bold "Error: `unzip` not present on your system.")
+            println("On Debian/Ubuntu systems you can install it with:")
+            println("sudo apt install unzip")
+            return false
+        end
+    end
+    return true
+end
+
+
+"""
     install(dir::String=""; test_run::Bool=false, interactive::Bool=true, dev_version::Bool=false)::Nothing
 
 Installs SpmImageTycoon.
@@ -279,10 +335,10 @@ If `dev_version` is `true`, then the experimental development version of `SpmIma
 function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, dev_version::Bool=false)::Nothing
     Term.Consoles.clear()
     println()
-    print(Panel("Welcome to the installation of $(@bold "SpmImage Tycoon")."; width=66, justify=:center, style="gold1", box=:DOUBLE))
+    print(Panel("Welcome to the installation of $(@bold "SpmImage Tycoon")!"; width=66, justify=:center, style="gold1", box=:DOUBLE))
     println("\n")
 
-    println("Please make sure that you have an active internet connection.\n")
+    basic_checks() || return
 
     dir_target = (dir == "") ? get_default_install_dir() : dir
     shortcuts = Set{Shortcuts}([ShortcutStart, ShortcutDesktop])
@@ -307,7 +363,9 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
         version_tycoon = TOML.parsefile(joinpath(get_package_dir(), "Project.toml"))["version"]
         version_spmimages = TOML.parsefile(joinpath(get_package_dir("SpmImages"), "Project.toml"))["version"]
         version_spmspectroscopy = TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"]
-        Pkg.activate()
+        redirect_stderr(devnull) do
+            Pkg.activate()
+        end
     end
 
     data = Dict{String,Any}(
