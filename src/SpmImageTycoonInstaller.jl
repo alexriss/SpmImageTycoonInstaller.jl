@@ -306,7 +306,7 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
         data_shortcuts = add_shortcuts(shortcuts, dir_target)
         version_tycoon = TOML.parsefile(joinpath(get_package_dir(), "Project.toml"))["version"]
         version_spmimages = TOML.parsefile(joinpath(get_package_dir("SpmImages"), "Project.toml"))["version"]
-        version_spmspectroscopy = TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"],
+        version_spmspectroscopy = TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"]
         Pkg.activate()
     end
 
