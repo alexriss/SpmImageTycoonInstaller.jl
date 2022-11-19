@@ -340,7 +340,15 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
 
     basic_checks() || return
 
-    dir_target = (dir == "") ? get_default_install_dir() : dir
+    dir_last = get_last_install_dir()
+    if dir != ""
+        dir_target = dir
+    elseif !isnothing(dir_last)
+        dir_target = dir_last
+    else
+        dir_target = get_default_install_dir()
+    end
+
     shortcuts = Set{Shortcuts}([ShortcutStart, ShortcutDesktop])
     if interactive
         dir_target = choose_install_dir(dir_target)
