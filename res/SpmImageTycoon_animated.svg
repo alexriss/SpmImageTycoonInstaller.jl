@@ -8,9 +8,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="36.0mm"
-   height="36.0mm"
-   viewBox="0 0 36.0 36.0"
+   width="46.0mm"
+   height="46.0mm"
+   viewBox="0 0 46.0 46.0"
    version="1.1"
    id="svg8"
    inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
@@ -124,7 +124,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-103.70834,-140.08855)">
+     transform="translate(-98.70834,-140.08855)">
 
     <circle
        style="opacity:0.998;fill:#356184;fill-opacity:1;stroke-width:0.1;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill"
@@ -183,14 +183,35 @@
        cy="158.08855"
        r="2.4568453" />
   </g>
-
-   <animateTransform attributeName="transform"
-      type="rotate"
-      from="0 18 18"
-      to="360 18 18"
-      begin="2s"
-      dur="69s"
-      repeatCount="indefinite"
-   />
+  </g>
+  <g transform=" matrix(0.02, 0.19, 0.27, 0.014, 23, 18)">
+    <path d="M 0,70 A 65,70 0 0,0 65,0 5,5 0 0,1 75,0 75,70 0 0,1 0,70Z" fill="#C1666B">
+      <animateTransform
+         attributeName="transform" type="rotate"
+         dur="5s" repeatCount="indefinite"
+         from="2160" to="0"
+         values="2160; 1080; 0" 
+         keyTimes="0; 0.45; 1"
+      />
+    </path>
+  </g>
+  <g transform="translate(-98.70834,-140.08855)">
+    <rect
+       style="opacity:0.998;fill:url(#linearGradient864);fill-opacity:1;stroke-width:0.131524;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill"
+       id="rect847"
+       width="12.179701"
+       height="12.179701"
+       x="12.605658"
+       y="-197.10741"
+       ry="2.2370877"
+       transform="rotate(135)"
+       inkscape:transform-center-x="-22.743727"
+       inkscape:transform-center-y="-5.095587" />
+    <circle
+       style="opacity:0.998;fill:url(#linearGradient2909);fill-opacity:1;stroke:#356184;stroke-width:2.721;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="path938-1"
+       cx="121.70834"
+       cy="158.08855"
+       r="2.4568453" />
   </g>
 </svg>

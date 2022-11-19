@@ -70,6 +70,8 @@ function get_package_dir(name::String="")::String
     if name == ""
         name = "SpmImageTycoon"
     end
+    d = Base.find_package(name)
+    isnothing(d) && return ""
     return abspath(joinpath(Base.find_package(name), "../.."))
 end
 
@@ -179,6 +181,9 @@ function compile_app(dir_target::String; dev_version::Bool=false)::Tuple{String,
         Pkg.add("SpmImageTycoon")
     end
 
+    # we need make sure Blink/Electron is installed, too
+    Pkg.build("Blink")
+    
     dir_source = get_package_dir()
     try
         create_app(dir_source, dir_target, incremental=false, filter_stdlibs=true, include_lazy_artifacts=true, force=true)
@@ -365,13 +370,14 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
 
     errors_occured = wrapper_compile_app(dir_target, test_run=test_run, dev_version=dev_version)
 
+    data_shortcuts = Dict{String,Any}("num" => length(shortcuts))
     if test_run
-        data_shortcuts = add_shortcuts_sim(shortcuts)
+        errors_occured || (data_shortcuts = add_shortcuts_sim(shortcuts))
         version_tycoon = "..."
         version_spmimages = "..."
         version_spmspectroscopy = "..."
     else
-        data_shortcuts = add_shortcuts(shortcuts, dir_target)
+        errors_occured || (data_shortcuts = add_shortcuts(shortcuts, dir_target))
         version_tycoon = TOML.parsefile(joinpath(get_package_dir(), "Project.toml"))["version"]
         version_spmimages = TOML.parsefile(joinpath(get_package_dir("SpmImages"), "Project.toml"))["version"]
         version_spmspectroscopy = TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"]
@@ -392,7 +398,8 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
             "SpmImageTycoon" => version_tycoon,
             "SpmImages" => version_spmimages,
             "SpmSpectroscopy" => version_spmspectroscopy,
-        )
+        ),
+        "errors" => errors_occured
     )
     save_info_log(data)
 
