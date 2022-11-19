@@ -47,7 +47,7 @@ function get_default_install_dir()::String
         d = "."
     end
 
-    return abspath(get_install_subdir(d))
+    return get_install_subdir(d)
 end
 
 
@@ -57,7 +57,10 @@ end
 Returns the sub-directory to install SpmImageTycoon to.
 """
 function get_install_subdir(dir::String)::String
-    return joinpath(dir, "SpmImageTycoon")
+    d = lowercase(dir)
+    (contains(d, "spmimagetycoon") || contains(d, "spmimage tycoon")) && return dir
+   
+    return abspath(joinpath(dir, "SpmImageTycoon"))
 end
 
 
@@ -94,14 +97,11 @@ function choose_install_dir(dir::String)::String
             dir = i
         end
 
-        if !contains(dir, "SpmImageTycoon")
-            dir = joinpath(dir, "SpmImageTycoon")
-        end
-        dir = abspath(dir)
-        if isdir(dir) && dir != get_default_install_dir()  # it is ok to overwrite default installation directory
+        dir = get_install_subdir(dir)
+        if isdir(dir) && dir != get_default_install_dir()  && dir != get_last_install_dir()  # it is ok to overwrite default and previous installation directories
             i = "a"
             while i ∉ ["y","n", ""]
-                print("Directory \"$dir\" exists. Overwrite? [y/N]")
+                print("Directory \"$dir\" exists. Overwrite [y/N]: ")
                 i = lowercase(readline())
             end
             if i == "y"
@@ -183,7 +183,7 @@ function compile_app(dir_target::String; dev_version::Bool=false)::Tuple{String,
 
     # we need make sure Blink/Electron is installed, too
     Pkg.build("Blink")
-    
+
     dir_source = get_package_dir()
     try
         create_app(dir_source, dir_target, incremental=false, filter_stdlibs=true, include_lazy_artifacts=true, force=true)
@@ -351,7 +351,7 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
 
     dir_last = get_last_install_dir()
     if dir != ""
-        dir_target = dir
+        dir_target = get_install_subdir(dir)
     elseif !isnothing(dir_last)
         dir_target = dir_last
     else
