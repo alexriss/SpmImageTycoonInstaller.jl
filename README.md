@@ -9,7 +9,9 @@
 
 Installer for the world-famous [SpmImage Tycoon](https://github.com/alexriss/SpmImageTycoon.jl) - a cross-platform app to manage and edit scanning probe microscopy images and spectra.
 
-![demo](demo/screenshot_install.png?raw=true)
+## Screenshot
+
+![screenshot](demo/screenshot_install.png?raw=true)
 
 ## Use
 
