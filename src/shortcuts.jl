@@ -54,7 +54,7 @@ function choose_startmenu_shortcuts()::Set{Shortcuts}
     println()
 
     # Start menu
-    if Sys.iswindows() || (Sys.islinux() && isdir(linux_startmenu_dir))
+    if Sys.iswindows() || Sys.islinux()
         print("Add Start Menu shortcut [Y/n]: ")
         i = lowercase(readline())
         if i == "y" || i == ""
@@ -105,6 +105,7 @@ end
 Adds start menu shortcut in Linux.
 """
 function add_shortcut_linux_startmenu(dir_target::String)::Dict{String,Any}
+    isdir(linux_startmenu_dir) || mkpath(linux_startmenu_dir)
     p = joinpath(linux_startmenu_dir, linux_startmenu_path)
     sicon = joinpath(dir_target, linux_icon_path)
     spath = joinpath(dir_target, linux_executable_path)
