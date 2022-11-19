@@ -33,7 +33,13 @@ The same procedure can be used to update to the latest version.
 
 The compiled version will start fast, even on the first run.
 
-_Tested on Windows and Linux so far. If you are a Apple user, give it a try._
+_Tested on Windows and Linux so far. If you are a Apple user and feel brave, give it a try._
+
+## Known issues
+
+So far, I have tested the installer on Windows 11, Ubuntu/WSL, as well as Manjaro 22, all using Julia 1.8.2.
+Installations worked well, except for Manjaro Linux. Here, the package compilation errored,
+likely related to [this bug](https://github.com/JuliaLang/PackageCompiler.jl/issues/16).
 
 ## Cite
 
