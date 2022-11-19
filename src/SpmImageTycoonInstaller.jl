@@ -300,7 +300,9 @@ Some basic checks before installation.
 """
 function basic_checks()::Bool
     try
-        Sockets.connect("github.com", 443)
+        redirect_stderr(devnull) do
+            Sockets.connect("github.com", 443)
+        end
     catch
         println(@bold "Error: No active internet connection detected.")
         println("Please connect to the internet and run the installer again.")
@@ -310,7 +312,9 @@ function basic_checks()::Bool
     # we need `unzip` for Blink.jl installation on Linux
     if Sys.islinux()
         try
-            _ = read(`which unzip`, String);
+            redirect_stderr(devnull) do
+                _ = read(`which unzip`, String);
+            end
         catch
             println(@bold "Error: `unzip` not present on your system.")
             println("On Debian/Ubuntu systems you can install it with:")

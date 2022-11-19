@@ -88,7 +88,7 @@ function check_autohotkey()::Bool
     if Sys.iswindows()
         try
             redirect_stderr(devnull) do
-                out = read(`cmd.exe /c assoc .ahk`, String);
+                _ = read(`cmd.exe /c assoc .ahk`, String);
             end
             return true
         catch
