@@ -188,10 +188,10 @@
     <path d="M 0,70 A 65,70 0 0,0 65,0 5,5 0 0,1 75,0 75,70 0 0,1 0,70Z" fill="#C1666B">
       <animateTransform
          attributeName="transform" type="rotate"
-         dur="5s" repeatCount="indefinite"
-         from="2160" to="0"
-         values="2160; 1080; 0" 
-         keyTimes="0; 0.45; 1"
+         dur="1s" repeatCount="indefinite"
+         from="360" to="0"
+         values="360; 180; 0" 
+         keyTimes="0; 0.52; 1"
       />
     </path>
   </g>
