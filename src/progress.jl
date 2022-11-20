@@ -61,24 +61,3 @@ function update_progress(compile_task::Task, out_stream1::IOStream, out_stream2:
 
     return nothing
 end
-
-
-"""for testing, to remove"""
-function testr()
-    stdout_ = stdout
-    #pbar, job = setup_progress_bar()
-    render(pbar)
-    redirect_stdio(stdout=devnull) do
-        println("test1")
-        println("test2")
-        for i in 1:10
-            with(pbar) do
-                redirect_stdio(stdout=stdout_) do
-                    update!(job)
-                    render(pbar)
-                end
-            end
-            sleep(1)
-        end
-    end
-end
