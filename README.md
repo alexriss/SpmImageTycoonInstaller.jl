@@ -40,8 +40,11 @@ _Tested on Windows and Linux so far. If you are a Apple user and feel brave, giv
 <table>
   <tr>
     <td>
-      <a href="http://www.youtube.com/watch?v=sdbbrMBQmpA" target="_blank"><img src="http://img.youtube.com/vi/sdbbrMBQmpA/0.jpg" width="230" /></a>
+      <a href="http://www.youtube.com/watch?v=sdbbrMBQmpA" target="_blank"><img src="http://img.youtube.com/vi/sdbbrMBQmpA/0.jpg" width="280" /></a>
     </td>
+  </tr>
+  <tr>
+    <td>Startup of compiled version<br />(YouTube)</td>
   </tr>
 </table>
 
