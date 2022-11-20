@@ -35,6 +35,16 @@ The compiled version will start fast, even on the first run.
 
 _Tested on Windows and Linux so far. If you are a Apple user and feel brave, give it a try._
 
+## Demo
+
+<table>
+  <tr>
+    <td>
+      <a href="http://www.youtube.com/watch?v=sdbbrMBQmpA" target="_blank"><img src="http://img.youtube.com/vi/sdbbrMBQmpA/0.jpg" width="230" /></a>
+    </td>
+  </tr>
+</table>
+
 ## Known issues
 
 So far, I have tested the installer on Windows 11, Ubuntu/WSL, as well as Manjaro 22, all using Julia 1.8.2.
