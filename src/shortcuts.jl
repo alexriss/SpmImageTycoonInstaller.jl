@@ -206,53 +206,70 @@ end
 
 
 """
-    add_shortcuts(s::Set{Shortcuts}, dir_target::String)::Dict{String,Any}
+    add_shortcuts(s::Set{Shortcuts}, dir_target::String)::Tuple{Dict{String,Any},String,String}
     
 Adds shortcuts to Start Menu and Desktop.
 """
-function add_shortcuts(s::Set{Shortcuts}, dir_target::String)::Dict{String,Any}
-    d = Dict{String,Any}("num" => length(s))
+function add_shortcuts(s::Set{Shortcuts}, dir_target::String)::Tuple{Dict{String,Any},String,String}
+    d = Dict{String,Any}(
+        "num" => length(s),
+        "errors" => false
+    )
 
     length(s) > 0 && println("\n")
 
-    if ShortcutStart in s
-        println(@italic "Adding Start Menu shortcut.")
+    err = ""
+    err_full = ""
+    try
+        if ShortcutStart in s
+            println(@italic "Adding Start Menu shortcut.")
 
-        if Sys.iswindows()
-            d["StartMenu"] = add_shortcut_win_startmenu(dir_target)
-            if check_autohotkey()
-                d["StartMenu_AHK"] = add_shortcut_win_ahk_startmenu(dir_target)
+            if Sys.iswindows()
+                d["StartMenu"] = add_shortcut_win_startmenu(dir_target)
+                if check_autohotkey()
+                    d["StartMenu_AHK"] = add_shortcut_win_ahk_startmenu(dir_target)
+                end
+            end
+            if Sys.islinux() && isdir(linux_startmenu_dir)
+                d["StartMenu"] = add_shortcut_linux_startmenu(dir_target)
             end
         end
-        if Sys.islinux() && isdir(linux_startmenu_dir)
-            d["StartMenu"] = add_shortcut_linux_startmenu(dir_target)
-        end
-    end
 
-    if ShortcutDesktop in s
-        println(@italic "Adding Desktop shortcut.")
+        if ShortcutDesktop in s
+            println(@italic "Adding Desktop shortcut.")
 
-        if Sys.iswindows()
-            d["Desktop"] = add_shortcut_win_desktop(dir_target)
-            if check_autohotkey()
-                d["Desktop_AHK"] = add_shortcut_win_ahk_desktop(dir_target)
+            if Sys.iswindows()
+                d["Desktop"] = add_shortcut_win_desktop(dir_target)
+                if check_autohotkey()
+                    d["Desktop_AHK"] = add_shortcut_win_ahk_desktop(dir_target)
+                end
             end
         end
+    catch e
+        d["errors"] = true
+        err = sprint(showerror, e)
+        err_full = sprint(showerror, e, catch_backtrace())
     end
 
-    return d
+    return d, err, err_full
 end
 
 
 """
-    add_shortcuts_sim(s::Set{Shortcuts})::Dict{String,Any}
+    add_shortcuts_sim(s::Set{Shortcuts})::Tuple{Dict{String,Any},String,String}
 
 Test run function for adding shortcuts.
 """
-function add_shortcuts_sim(s::Set{Shortcuts})::Dict{String,Any}
-    d = Dict{String,Any}("num" => length(s))
+function add_shortcuts_sim(s::Set{Shortcuts})::Tuple{Dict{String,Any},String,String}
+    d = Dict{String,Any}(
+        "num" => length(s),
+        "errors" => false
+    )
 
     length(s) > 0 && println("\n")
+
+    err = ""
+    err_full = ""
 
     if ShortcutStart in s
         println(@italic "Adding Start Menu shortcut.")
@@ -272,5 +289,11 @@ function add_shortcuts_sim(s::Set{Shortcuts})::Dict{String,Any}
         )
     end
 
-    return d
+    # throw test error once in a while
+    if rand() < 0.5 && !isdefined(Main, :Test)
+        d["errors"] = true
+        err = "Test error."
+        err_full = "This error is thrown randomly, just to test this pathway."
+    end
+    return d, err, err_full
 end

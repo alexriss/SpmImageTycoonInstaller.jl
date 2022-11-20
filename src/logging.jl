@@ -4,8 +4,6 @@ const log_dir = ".spmimagetycoon/install/logs/"  # will be in home directory
 
 const info_dir = ".spmimagetycoon/install/"  # will be in home directory
 const info_filename = "install_{{ date }}.toml"  # log filename - date will put in there (stdout)
-const info_filename_start = "install_"
-const info_filename_end = ".toml"
 
 """
     get_log_filenames()::Tuple{String,String}
@@ -34,6 +32,9 @@ function get_last_info_filenames(n::Int=1; fullpath::Bool=true)::Vector{String}
     d = joinpath(homedir(), info_dir)
     isdir(d) || return []
 
+    info_filename_start = info_filename[begin:findfirst("{", info_filename)[1]-1]
+    info_filename_end = info_filename[findlast("}", info_filename)[1]+1:end]
+
     files = readdir(d, sort=true, join=fullpath)
     filter!(files) do f
         endswith(f, info_filename_end) && startswith(basename(f), info_filename_start)
@@ -56,7 +57,7 @@ function get_last_install_dir()::Union{Nothing,String}
         try
             data = TOML.parsefile(files[end])
         finally
-            return data["target"]
+            haskey(data, "target") &&  return data["target"]
         end
     end
     return nothing

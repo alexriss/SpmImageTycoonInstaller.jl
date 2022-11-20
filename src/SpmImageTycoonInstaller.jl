@@ -18,6 +18,7 @@ const icon_targets= ("bin/SpmImageTycoon.svg", "bin/SpmImageTycoon.png", "bin/Sp
 
 const autohotkey_dir_source = "helpers/windows_tray"
 const autohotkey_dir_target= "windows_tray"
+const autohotkey_ext_skip = ".bat"
 const autohotkey_bat_target = "windows_tray/SpmImageTycoon.bat"
 const autohotkey_bat_content = "{{ executable }} --julia-args -t auto\ntimeout /t 60"
 
@@ -136,7 +137,19 @@ Copies autohotkey helpers to installation directory.
 """
 function copy_autohotkey(dir_source::String, dir_target::String)::Nothing
     if Sys.iswindows()
-        cp(joinpath(dir_source, autohotkey_dir_source), joinpath(dir_target, autohotkey_dir_target))
+        d_target = joinpath(dir_target, autohotkey_dir_target)
+        if !isdir(d_target)
+            mkpath(d_target)
+        end
+
+        d_source = joinpath(dir_source, autohotkey_dir_source)
+        files = readdir(d_source, sort=true, join=fullpath)
+
+        map(files) do f
+            if !endswith(f, autohotkey_ext_skip)
+                cp(f, d_target)
+            end
+        end
 
         # we have to rewrite the .bat file to use the compiled file
         c = autohotkey_bat_content
@@ -260,21 +273,18 @@ end
 Wrapper that runs the `compile_app` function asynchronosly and updates the progress bar.
 """
 function wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false)::Bool
-    out_stdout = stdout
-    out_stderr = stderr
-
-    out_filename1, out_filename2 = get_log_filenames()
-
     if test_run
         compile_task = @task compile_app_sim()
     else
         compile_task = @task compile_app(dir_target, dev_version=dev_version)
     end
 
+    out_stdout = stdout
+    out_stderr = stderr
+    out_filename1, out_filename2 = get_log_filenames()
     out_file1 = open(out_filename1, "w")
     out_file2 = open(out_filename2, "w")
     redirect_stdio(;stdout=out_file1,stderr=out_file2)
-    # buffer_redirect_task = @async write(OUT_buffer, OUT.in)
     
     schedule(compile_task)
     update_progress(compile_task, out_file1, out_file2, out_filename1, out_filename2, out_stdout)
@@ -372,12 +382,16 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
 
     data_shortcuts = Dict{String,Any}("num" => length(shortcuts))
     if test_run
-        errors_occured || (data_shortcuts = add_shortcuts_sim(shortcuts))
+        if !errors_occured 
+            data_shortcuts, err, err_full = add_shortcuts_sim(shortcuts)
+        end
         version_tycoon = "..."
         version_spmimages = "..."
         version_spmspectroscopy = "..."
     else
-        errors_occured || (data_shortcuts = add_shortcuts(shortcuts, dir_target))
+        if !errors_occured
+            data_shortcuts, err, err_full = add_shortcuts(shortcuts, dir_target)
+        end
         version_tycoon = TOML.parsefile(joinpath(get_package_dir(), "Project.toml"))["version"]
         version_spmimages = TOML.parsefile(joinpath(get_package_dir("SpmImages"), "Project.toml"))["version"]
         version_spmspectroscopy = TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"]
@@ -403,10 +417,19 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
     )
     save_info_log(data)
 
-    if !errors_occured
+    if !errors_occured && !data_shortcuts["errors"]
         println("\n\n")
         println(Panel("Installation complete. Enjoy SpmImage Tycoon."; width = 66, justify = :center))
         println()
+    elseif !errors_occured
+        println("\n\n")
+        println(Panel("SpmImage Tycoon was installed."; width = 66, justify = :center))
+        println("\n\nBut some errors were encountered when trying to create shortcuts.")
+        print("Press ENTER to view the error trace: ")
+        readline()
+        println()
+        println(err)
+        println(err_full)
     end
 
     return nothing
