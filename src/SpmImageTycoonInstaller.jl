@@ -19,7 +19,7 @@ const icon_targets= ("bin/SpmImageTycoon.svg", "bin/SpmImageTycoon.png", "bin/Sp
 const autohotkey_dir_source = "helpers/windows_tray"
 const autohotkey_dir_target= "windows_tray"
 const autohotkey_ext_skip = ".bat"
-const autohotkey_bat_target = "windows_tray/SpmImageTycoon.bat"
+const autohotkey_bat_target = "SpmImageTycoon.bat"
 const autohotkey_bat_content = "{{ executable }} --julia-args -t auto\ntimeout /t 60"
 
 global DATE_install::DateTime=Dates.now()
@@ -143,18 +143,20 @@ function copy_autohotkey(dir_source::String, dir_target::String)::Nothing
         end
 
         d_source = joinpath(dir_source, autohotkey_dir_source)
-        files = readdir(d_source, sort=true, join=fullpath)
+        files = readdir(d_source, sort=true, join=true)
 
         map(files) do f
             if !endswith(f, autohotkey_ext_skip)
-                cp(f, d_target)
+                @show f, joinpath(d_target, f)
+                cp(f, joinpath(d_target, basename(f)), force=true)
             end
         end
 
         # we have to rewrite the .bat file to use the compiled file
         c = autohotkey_bat_content
         c = replace(c, "{{ executable }}" =>  abspath(joinpath(dir_target, win_executable_path)))
-        open(joinpath(dir_target, autohotkey_bat_target), "w") do io
+        fname = joinpath(d_target, autohotkey_bat_target)
+        open(fname, "w") do io
             println(io, c)
         end
     end
