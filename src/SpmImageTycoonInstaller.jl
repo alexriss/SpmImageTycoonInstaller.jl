@@ -8,7 +8,7 @@ using Term
 using Term.Progress
 using TOML
 
-export install
+export install, install_shortcuts
 
 const VERSION = VersionNumber(TOML.parsefile(joinpath(@__DIR__, "../Project.toml"))["version"]) 
 
@@ -344,7 +344,8 @@ end
 
 
 """
-    install(dir::String=""; test_run::Bool=false, interactive::Bool=true, dev_version::Bool=false)::Nothing
+    install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=false,
+        interactive::Bool=true, dev_version::Bool=false, )::Nothing
 
 Installs SpmImageTycoon.
 
@@ -352,8 +353,10 @@ A specific directory can be directly given as `dir`.
 If `test_run` is `true`, then installation will only be simulated and compilation will be skipped.
 If `interactive` is `false`, then the install will proceed without user interaction.
 If `dev_version` is `true`, then the experimental development version of `SpmImageTycoon` will be installed.
+If `shortcuts_only` is  `true`. then only shortcuts will be installed - not the app itself (use this only if you installed the app before - otherwise the shortcuts won't work).
 """
-function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, dev_version::Bool=false)::Nothing
+function install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=false,
+        interactive::Bool=true, dev_version::Bool=false, )::Nothing
     Term.Consoles.clear()
     println()
     print(Panel("Welcome to the installation of $(@bold "SpmImage Tycoon")!"; width=66, justify=:center, style="gold1", box=:DOUBLE))
@@ -377,10 +380,15 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
     end
 
     global DATE_install = Dates.now()
-    dev_version && println("\nUsing development version of SpmImage Tycoon.")
-    println("\nInstalling into directory \"$(dir_target)\".\nPlease have a beverage.\n")
 
-    errors_occured = wrapper_compile_app(dir_target, test_run=test_run, dev_version=dev_version)
+    if !shortcuts_only
+        dev_version && println("\nUsing development version of SpmImage Tycoon.")
+        println("\nInstalling into directory \"$(dir_target)\".\nPlease have a beverage.\n")
+
+        errors_occured = wrapper_compile_app(dir_target, test_run=test_run, dev_version=dev_version)
+    else
+        errors_occured = false
+    end
 
     data_shortcuts = Dict{String,Any}("num" => length(shortcuts))
     if test_run
@@ -415,7 +423,8 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
             "SpmImages" => version_spmimages,
             "SpmSpectroscopy" => version_spmspectroscopy,
         ),
-        "errors" => errors_occured
+        "errors" => errors_occured,
+        "shortcuts_only" => shortcuts_only
     )
     save_info_log(data)
 
@@ -423,6 +432,14 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
         println("\n\n")
         println(Panel("Installation complete. Enjoy SpmImage Tycoon."; width = 66, justify = :center))
         println()
+    elseif shortcuts_only && data_shortcuts["errors"]
+        println("\n\n")
+        println("Errors were encountered when trying to create shortcuts.")
+        print("Press ENTER to view the error trace: ")
+        readline()
+        println()
+        println(err)
+        println(err_full)
     elseif !errors_occured
         println("\n\n")
         println(Panel("SpmImage Tycoon was installed."; width = 66, justify = :center))
@@ -435,6 +452,18 @@ function install(dir::String=""; test_run::Bool=false, interactive::Bool=true, d
     end
 
     return nothing
+end
+
+"""
+    install_shortcuts(dir::String=""; test_run::Bool=false, interactive::Bool=true)::Nothing
+
+Installs shortcuts for SpmImage Tycoon. Use this only if you installed the app before - otherwise the shortcuts won't work.
+
+If `test_run` is `true`, then installation will only be simulated and compilation will be skipped.
+If `interactive` is `false`, then the install will proceed without user interaction.
+"""
+function install_shortcuts(dir::String=""; test_run::Bool=false, interactive::Bool=true)::Nothing
+    return install(dir, shortcuts_only=true, test_run=test_run, interactive=interactive)
 end
 
 
