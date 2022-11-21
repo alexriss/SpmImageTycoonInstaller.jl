@@ -20,7 +20,7 @@ const autohotkey_dir_source = "helpers/windows_tray"
 const autohotkey_dir_target= "windows_tray"
 const autohotkey_ext_skip = ".bat"
 const autohotkey_bat_target = "SpmImageTycoon.bat"
-const autohotkey_bat_content = "{{ executable }} --julia-args -t auto\ntimeout /t 60"
+const autohotkey_bat_content = "\"{{ executable }}\" --julia-args -t auto\ntimeout /t 60"
 
 global DATE_install::DateTime=Dates.now()
 
