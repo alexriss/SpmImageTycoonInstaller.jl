@@ -390,21 +390,24 @@ function install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=fals
         errors_occured = false
     end
 
+    version_tycoon = "..."
+    version_spmimages = "..."
+    version_spmspectroscopy = "..."
     data_shortcuts = Dict{String,Any}("num" => length(shortcuts))
     if test_run
         if !errors_occured 
             data_shortcuts, err, err_full = add_shortcuts_sim(shortcuts)
         end
-        version_tycoon = "..."
-        version_spmimages = "..."
-        version_spmspectroscopy = "..."
     else
         if !errors_occured
             data_shortcuts, err, err_full = add_shortcuts(shortcuts, dir_target)
         end
-        version_tycoon = TOML.parsefile(joinpath(get_package_dir(), "Project.toml"))["version"]
-        version_spmimages = TOML.parsefile(joinpath(get_package_dir("SpmImages"), "Project.toml"))["version"]
-        version_spmspectroscopy = TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"]
+        try
+            version_tycoon = TOML.parsefile(joinpath(get_package_dir(), "Project.toml"))["version"]
+            version_spmimages = TOML.parsefile(joinpath(get_package_dir("SpmImages"), "Project.toml"))["version"]
+            version_spmspectroscopy = TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"]
+        catch
+        end
         redirect_stderr(devnull) do
             Pkg.activate()
         end
