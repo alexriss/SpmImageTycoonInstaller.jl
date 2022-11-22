@@ -40,7 +40,7 @@ function get_last_info_filenames(n::Int=1; fullpath::Bool=true)::Vector{String}
         endswith(f, info_filename_end) && startswith(basename(f), info_filename_start)
     end
 
-    n > 0 && length(files) > 0 && return files[end-n+1:end]
+    n > 0 && length(files) >= n && return files[end-n+1:end]
     return files
 end
 
