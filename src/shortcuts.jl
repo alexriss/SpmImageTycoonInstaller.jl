@@ -230,7 +230,7 @@ function add_shortcuts(s::Set{Shortcuts}, dir_target::String)::Tuple{Dict{String
                     d["StartMenu_AHK"] = add_shortcut_win_ahk_startmenu(dir_target)
                 end
             end
-            if Sys.islinux() && isdir(linux_startmenu_dir)
+            if Sys.islinux()
                 d["StartMenu"] = add_shortcut_linux_startmenu(dir_target)
             end
         end
