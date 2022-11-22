@@ -21,12 +21,14 @@ Usage is simple:
 
 1. Install [Julia](https://julialang.org/)
 2. Start Julia and type the following two commands:
+
 ```julia
 using Pkg
 Pkg.add("SpmImageTycoonInstaller")
 using SpmImageTycoonInstaller
 install()
 ```
+
 This will install a compiled version of [SpmImage Tycoon](https://github.com/alexriss/SpmImageTycoon.jl).
 The installation will typically take 10 to 20 minutes and take up around 1 GB of space.
 The same procedure can be used to update to the latest version.
@@ -50,9 +52,10 @@ _Tested on Windows and Linux so far. If you are a Apple user and feel brave, giv
 
 ## Known issues
 
-So far, I have tested the installer on Windows 11, Ubuntu/WSL, as well as Manjaro 22, all using Julia 1.8.2.
-Installations worked well, except for Manjaro Linux. Here, the package compilation errored,
-likely related to [this bug](https://github.com/JuliaLang/PackageCompiler.jl/issues/16).
+So far, I have tested the installer on Windows 11, Ubuntu/WSL, as well as Manjaro 22, all using Julia 1.8.
+Installations worked well, except for certain configurations of Manjaro Linux.
+Here, the package compilation errored, likely related to [this bug](https://github.com/JuliaLang/PackageCompiler.jl/issues/16).
+As a workaround, install Julia via the [official binaries](https://julialang.org/downloads/) (instead of via the distro's package manager).
 
 ## Cite
 
@@ -78,8 +81,11 @@ If you use [SpmImage Tycoon](https://github.com/alexriss/SpmImageTycoon.jl) for 
 ## Tips and tricks
 
 To get rid of the console window under Windows, you can install [AutoHotkey](https://www.autohotkey.com/).
-This will be automatically detected and extra Start Menu and Desktop will be set up to suppress the console window.
+This will be automatically detected and extra Start Menu and Desktop will be set that start the app without the console window.
 
+## Get in touch and contribute
+
+Please post issues, suggestions, and pull requests on github.
 <a href="https://twitter.com/00alexx">Follow me on twitter</a> for updates and more information about this project: 
 <a href="https://twitter.com/00alexx"><img src="https://img.shields.io/twitter/follow/00alexx?style=social" alt="Twitter"></a>
 
