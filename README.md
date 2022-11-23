@@ -81,7 +81,7 @@ If you use [SpmImage Tycoon](https://github.com/alexriss/SpmImageTycoon.jl) for 
 ## Tips and tricks
 
 To get rid of the console window under Windows, you can install [AutoHotkey](https://www.autohotkey.com/).
-This will be automatically detected and extra Start Menu and Desktop will be set that start the app without the console window.
+This will be automatically detected and extra Start Menu and Desktop will be made that start the app without the console window.
 
 ## Get in touch and contribute
 
