@@ -165,11 +165,11 @@ end
 
 
 """
-    compile_app(dir_target::String, dev_version::Bool=false)::Tuple{String,String}
+    compile_app(dir_target::String, dev_version::Bool=false, local_version=local_version)::Tuple{String,String}
 
 Runs the package compilation and returns an error message in case of an error. STDOUT is redirected into the global varible OUT.
 """
-function compile_app(dir_target::String; dev_version::Bool=false)::Tuple{String,String}
+function compile_app(dir_target::String; dev_version::Bool=false, local_version=local_version)::Tuple{String,String}
     err = ""
     err_full = ""
 
@@ -189,15 +189,17 @@ function compile_app(dir_target::String; dev_version::Bool=false)::Tuple{String,
         i == 6 && return err, err_full
     end
 
-    Pkg.activate(temp=true)
-    if dev_version
-        Pkg.add(url=dev_url)
-    else
-        Pkg.add("SpmImageTycoon")
+    if !local_version
+        Pkg.activate(temp=true)
+        if dev_version
+            Pkg.add(url=dev_url)
+        else
+            Pkg.add("SpmImageTycoon")
+        end
+    
+        # we need make sure Blink/Electron is installed, too
+        Pkg.build("Blink")
     end
-
-    # we need make sure Blink/Electron is installed, too
-    Pkg.build("Blink")
 
     dir_source = get_package_dir()
     try
@@ -270,15 +272,15 @@ end
 
 
 """
-    wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false)::Bool
+    wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false, local_version::Bool=false)::Bool
 
 Wrapper that runs the `compile_app` function asynchronosly and updates the progress bar.
 """
-function wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false)::Bool
+function wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false, local_version::Bool=false)::Bool
     if test_run
         compile_task = @task compile_app_sim()
     else
-        compile_task = @task compile_app(dir_target, dev_version=dev_version)
+        compile_task = @task compile_app(dir_target, dev_version=dev_version, local_version=local_version)
     end
 
     out_stdout = stdout
@@ -311,11 +313,20 @@ end
 
 
 """
-    basic_checks()::Bool
+    basic_checks(; local_version::Bool=false)::Bool
 
 Some basic checks before installation.
 """
-function basic_checks()::Bool
+function basic_checks(; local_version::Bool=false)::Bool
+    if local_version
+        if isnothing(get_package_dir())
+            println(@bold "Error: No local installation found.")
+            println("To use the `local_version` flag, you need to have a version of SpmImageTycoon installed.")
+            return false
+        end
+        return true  # the other checks are not necessary for a local version instllation
+    end
+
     try
         redirect_stderr(devnull) do
             Sockets.connect("github.com", 443)
@@ -345,7 +356,7 @@ end
 
 """
     install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=false,
-        interactive::Bool=true, dev_version::Bool=false, )::Nothing
+        interactive::Bool=true, dev_version::Bool=false, local_version::Bool=false)::Nothing
 
 Installs SpmImageTycoon.
 
@@ -353,16 +364,17 @@ A specific directory can be directly given as `dir`.
 If `test_run` is `true`, then installation will only be simulated and compilation will be skipped.
 If `interactive` is `false`, then the install will proceed without user interaction.
 If `dev_version` is `true`, then the experimental development version of `SpmImageTycoon` will be installed.
+If `local_version` is `true`, then the local installed version of `SpmImageTycoon` will be installed (overrides `dev_version`).
 If `shortcuts_only` is  `true`. then only shortcuts will be installed - not the app itself (use this only if you installed the app before - otherwise the shortcuts won't work).
 """
 function install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=false,
-        interactive::Bool=true, dev_version::Bool=false, )::Nothing
+        interactive::Bool=true, dev_version::Bool=false, local_version::Bool=false)::Nothing
     Term.Consoles.clear()
     println()
     print(Panel("Welcome to the installation of $(@bold "SpmImage Tycoon")!"; width=66, justify=:center, style="gold1", box=:DOUBLE))
     println("\n")
 
-    basic_checks() || return
+    basic_checks(local_version=local_version) || return
 
     dir_last = get_last_install_dir()
     if dir != ""
@@ -383,9 +395,10 @@ function install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=fals
 
     if !shortcuts_only
         dev_version && println("\nUsing development version of SpmImage Tycoon.")
+        local_version && println("\nUsing local version of SpmImage Tycoon.")
         println("\nInstalling into directory \"$(dir_target)\".\nPlease have a beverage.\n")
 
-        errors_occured = wrapper_compile_app(dir_target, test_run=test_run, dev_version=dev_version)
+        errors_occured = wrapper_compile_app(dir_target, test_run=test_run, dev_version=dev_version, local_version=local_version)
     else
         errors_occured = false
     end
