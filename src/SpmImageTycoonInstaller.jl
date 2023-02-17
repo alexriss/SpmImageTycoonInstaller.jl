@@ -167,7 +167,7 @@ end
 """
     compile_app(dir_target::String, dev_version::Bool=false, local_version=local_version)::Tuple{String,String}
 
-Runs the package compilation and returns an error message in case of an error. STDOUT is redirected into the global varible OUT.
+Runs the package compilation and returns an error message in case of an error.
 """
 function compile_app(dir_target::String; dev_version::Bool=false, local_version=local_version)::Tuple{String,String}
     err = ""
@@ -272,30 +272,34 @@ end
 
 
 """
-    wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false, local_version::Bool=false)::Bool
+    wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false, local_version::Bool=false, show_output::Bool=false)::Bool
 
 Wrapper that runs the `compile_app` function asynchronosly and updates the progress bar.
 """
-function wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false, local_version::Bool=false)::Bool
+function wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false, local_version::Bool=false, show_output::Bool=false)::Bool
     if test_run
         compile_task = @task compile_app_sim()
     else
         compile_task = @task compile_app(dir_target, dev_version=dev_version, local_version=local_version)
     end
 
-    out_stdout = stdout
-    out_stderr = stderr
-    out_filename1, out_filename2 = get_log_filenames()
-    out_file1 = open(out_filename1, "w")
-    out_file2 = open(out_filename2, "w")
-    redirect_stdio(;stdout=out_file1,stderr=out_file2)
-    
-    schedule(compile_task)
-    update_progress(compile_task, out_file1, out_file2, out_filename1, out_filename2, out_stdout)
+    if show_output
+        schedule(compile_task)
+    else
+        out_stdout = stdout
+        out_stderr = stderr
+        out_filename1, out_filename2 = get_log_filenames()
+        out_file1 = open(out_filename1, "w")
+        out_file2 = open(out_filename2, "w")
+        redirect_stdio(;stdout=out_file1,stderr=out_file2)
+        
+        schedule(compile_task)
+        update_progress(compile_task, out_file1, out_file2, out_filename1, out_filename2, out_stdout)
 
-    redirect_stdio(stdout=out_stdout, stderr=out_stderr)
-    close(out_file1)
-    close(out_file2)
+        redirect_stdio(stdout=out_stdout, stderr=out_stderr)
+        close(out_file1)
+        close(out_file2)
+    end
     err, err_full = fetch(compile_task)
     
     errors_occured = false
@@ -313,11 +317,11 @@ end
 
 
 """
-    basic_checks(; local_version::Bool=false)::Bool
+    basic_checks(; local_version::Bool=false, show_output::Bool=false)::Bool
 
 Some basic checks before installation.
 """
-function basic_checks(; local_version::Bool=false)::Bool
+function basic_checks(; local_version::Bool=false, show_output::Bool=false)::Bool
     if local_version
         if isnothing(get_package_dir())
             println(@bold "Error: No local installation found.")
@@ -328,8 +332,12 @@ function basic_checks(; local_version::Bool=false)::Bool
     end
 
     try
-        redirect_stderr(devnull) do
+        if show_output
             Sockets.connect("github.com", 443)
+        else
+            redirect_stderr(devnull) do
+                Sockets.connect("github.com", 443)
+            end
         end
     catch
         println(@bold "Error: No active internet connection detected.")
@@ -340,8 +348,12 @@ function basic_checks(; local_version::Bool=false)::Bool
     # we need `unzip` for Blink.jl installation on Linux
     if Sys.islinux()
         try
-            redirect_stderr(devnull) do
+            if show_output
                 _ = read(`which unzip`, String);
+            else
+                redirect_stderr(devnull) do
+                    _ = read(`which unzip`, String);
+                end
             end
         catch
             println(@bold "Error: `unzip` not present on your system.")
@@ -356,7 +368,7 @@ end
 
 """
     install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=false,
-        interactive::Bool=true, dev_version::Bool=false, local_version::Bool=false)::Nothing
+        interactive::Bool=true, dev_version::Bool=false, local_version::Bool=false, show_output::Bool=false)::Nothing
 
 Installs SpmImageTycoon.
 
@@ -366,15 +378,16 @@ If `interactive` is `false`, then the install will proceed without user interact
 If `dev_version` is `true`, then the experimental development version of `SpmImageTycoon` will be installed.
 If `local_version` is `true`, then the local installed version of `SpmImageTycoon` will be installed (overrides `dev_version`).
 If `shortcuts_only` is  `true`. then only shortcuts will be installed - not the app itself (use this only if you installed the app before - otherwise the shortcuts won't work).
+If 'show_output' is `true`, then the behind-the-scenes output of the installation will be shown (instead of written to a log file).
 """
 function install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=false,
-        interactive::Bool=true, dev_version::Bool=false, local_version::Bool=false)::Nothing
+        interactive::Bool=true, dev_version::Bool=false, local_version::Bool=false, show_output::Bool=false)::Nothing
     Term.Consoles.clear()
     println()
     print(Panel("Welcome to the installation of $(@bold "SpmImage Tycoon")!"; width=66, justify=:center, style="gold1", box=:DOUBLE))
     println("\n")
 
-    basic_checks(local_version=local_version) || return
+    basic_checks(local_version=local_version, show_output=show_output) || return
 
     dir_last = get_last_install_dir()
     if dir != ""
@@ -398,7 +411,7 @@ function install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=fals
         local_version && println("\nUsing local version of SpmImage Tycoon.")
         println("\nInstalling into directory \"$(dir_target)\".\nPlease have a beverage.\n")
 
-        errors_occured = wrapper_compile_app(dir_target, test_run=test_run, dev_version=dev_version, local_version=local_version)
+        errors_occured = wrapper_compile_app(dir_target, test_run=test_run, dev_version=dev_version, local_version=local_version, show_output=show_output)
     else
         errors_occured = false
     end
@@ -421,8 +434,12 @@ function install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=fals
             version_spmspectroscopy = TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"]
         catch
         end
-        redirect_stderr(devnull) do
+        if show_output
             Pkg.activate()
+        else
+            redirect_stderr(devnull) do
+                Pkg.activate()
+            end
         end
     end
 
