@@ -13,7 +13,7 @@ export install, install_shortcuts
 const VERSION = VersionNumber(TOML.parsefile(joinpath(@__DIR__, "../Project.toml"))["version"]) 
 
 const dev_url = "https://github.com/alexriss/SpmImageTycoon.jl"
-const superdev_url = "https://github.com/alexriss/SpmImageTycoon.jl#dev"
+const superdev_branch = "dev"
 const icon_sources = ("res/media/logo_diamond.svg", "res/media/logo_diamond.png", "res/media/logo_diamond.ico")
 const icon_targets= ("bin/SpmImageTycoon.svg", "bin/SpmImageTycoon.png", "bin/SpmImageTycoon.ico")
 
@@ -195,7 +195,7 @@ function compile_app(dir_target::String; ver::String="main")::Tuple{String,Strin
         if ver == "dev"
             Pkg.add(url=dev_url)
         elseif ver == "superdev"
-            Pkg.add(url=superdev_url)
+            Pkg.add(url=dev_url, rev=superdev_branch)
         else
             Pkg.add("SpmImageTycoon")
         end
