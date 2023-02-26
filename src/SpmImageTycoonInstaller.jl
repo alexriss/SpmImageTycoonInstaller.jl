@@ -13,6 +13,7 @@ export install, install_shortcuts
 const VERSION = VersionNumber(TOML.parsefile(joinpath(@__DIR__, "../Project.toml"))["version"]) 
 
 const dev_url = "https://github.com/alexriss/SpmImageTycoon.jl"
+const superdev_url = "https://github.com/alexriss/SpmImageTycoon.jl#dev"
 const icon_sources = ("res/media/logo_diamond.svg", "res/media/logo_diamond.png", "res/media/logo_diamond.ico")
 const icon_targets= ("bin/SpmImageTycoon.svg", "bin/SpmImageTycoon.png", "bin/SpmImageTycoon.ico")
 
@@ -165,11 +166,11 @@ end
 
 
 """
-    compile_app(dir_target::String, dev_version::Bool=false, local_version=local_version)::Tuple{String,String}
+    compile_app(dir_target::String; ver::String="main")::Tuple{String,String}
 
 Runs the package compilation and returns an error message in case of an error.
 """
-function compile_app(dir_target::String; dev_version::Bool=false, local_version=local_version)::Tuple{String,String}
+function compile_app(dir_target::String; ver::String="main")::Tuple{String,String}
     err = ""
     err_full = ""
 
@@ -189,10 +190,12 @@ function compile_app(dir_target::String; dev_version::Bool=false, local_version=
         i == 6 && return err, err_full
     end
 
-    if !local_version
+    if ver != "local"
         Pkg.activate(temp=true)
-        if dev_version
+        if ver == "dev"
             Pkg.add(url=dev_url)
+        elseif ver == "superdev"
+            Pkg.add(url=superdev_url)
         else
             Pkg.add("SpmImageTycoon")
         end
@@ -272,18 +275,18 @@ end
 
 
 """
-    wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false, local_version::Bool=false, show_output::Bool=false)::Bool
+    wrapper_compile_app(dir_target::String; ver::String="main", test_run::Bool=false, debug::Bool=false)::Bool
 
 Wrapper that runs the `compile_app` function asynchronosly and updates the progress bar.
 """
-function wrapper_compile_app(dir_target::String; test_run::Bool=false, dev_version::Bool=false, local_version::Bool=false, show_output::Bool=false)::Bool
+function wrapper_compile_app(dir_target::String; ver::String="main", test_run::Bool=false, debug::Bool=false)::Bool
     if test_run
         compile_task = @task compile_app_sim()
     else
-        compile_task = @task compile_app(dir_target, dev_version=dev_version, local_version=local_version)
+        compile_task = @task compile_app(dir_target, ver=ver)
     end
 
-    if show_output
+    if debug
         schedule(compile_task)
     else
         out_stdout = stdout
@@ -317,22 +320,22 @@ end
 
 
 """
-    basic_checks(; local_version::Bool=false, show_output::Bool=false)::Bool
+    basic_checks(; ver::String="main", debug::Bool=false)::Bool
 
 Some basic checks before installation.
 """
-function basic_checks(; local_version::Bool=false, show_output::Bool=false)::Bool
-    if local_version
+function basic_checks(; ver::String="main", debug::Bool=false)::Bool
+    if ver == "local"
         if isnothing(get_package_dir())
             println(@bold "Error: No local installation found.")
-            println("To use the `local_version` flag, you need to have a version of SpmImageTycoon installed.")
+            println("To use the `local` version, you need to have SpmImageTycoon installed locally.")
             return false
         end
-        return true  # the other checks are not necessary for a local version instllation
+        return true  # the other checks are not necessary for a local version installation
     end
 
     try
-        if show_output
+        if debug
             Sockets.connect("github.com", 443)
         else
             redirect_stderr(devnull) do
@@ -348,7 +351,7 @@ function basic_checks(; local_version::Bool=false, show_output::Bool=false)::Boo
     # we need `unzip` for Blink.jl installation on Linux
     if Sys.islinux()
         try
-            if show_output
+            if debug
                 _ = read(`which unzip`, String);
             else
                 redirect_stderr(devnull) do
@@ -367,27 +370,29 @@ end
 
 
 """
-    install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=false,
-        interactive::Bool=true, dev_version::Bool=false, local_version::Bool=false, show_output::Bool=false)::Nothing
+    install(dir::String=""; ver::String="main", shortcuts_only::Bool=false,
+        interactive::Bool=true, debug::Bool=false, test::Bool=false)::Nothing
 
 Installs SpmImageTycoon.
 
 A specific directory can be directly given as `dir`.
-If `test_run` is `true`, then installation will only be simulated and compilation will be skipped.
-If `interactive` is `false`, then the install will proceed without user interaction.
-If `dev_version` is `true`, then the experimental development version of `SpmImageTycoon` will be installed.
-If `local_version` is `true`, then the local installed version of `SpmImageTycoon` will be installed (overrides `dev_version`).
+
+`ver` specifies the version to install: `"main"` (default), `"dev"` for the development version,
+`"local"` for the locally installed version of `SpmImageTycoon`.
+
 If `shortcuts_only` is  `true`. then only shortcuts will be installed - not the app itself (use this only if you installed the app before - otherwise the shortcuts won't work).
-If 'show_output' is `true`, then the behind-the-scenes output of the installation will be shown (instead of written to a log file).
+If `interactive` is `false`, then the install will proceed without user interaction.
+If 'debug' is `true`, then the behind-the-scenes output of the installation will be shown (instead of written to a log file).
+If `test` is `true`, then installation will only be simulated and compilation will be skipped.
 """
-function install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=false,
-        interactive::Bool=true, dev_version::Bool=false, local_version::Bool=false, show_output::Bool=false)::Nothing
+function install(dir::String=""; ver::String="main", shortcuts_only::Bool=false,
+        interactive::Bool=true, debug::Bool=false, test::Bool=false)::Nothing
     Term.Consoles.clear()
     println()
     print(Panel("Welcome to the installation of $(@bold "SpmImage Tycoon")!"; width=66, justify=:center, style="gold1", box=:DOUBLE))
     println("\n")
 
-    basic_checks(local_version=local_version, show_output=show_output) || return
+    basic_checks(ver=ver, debug=debug) || return
 
     dir_last = get_last_install_dir()
     if dir != ""
@@ -407,11 +412,16 @@ function install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=fals
     global DATE_install = Dates.now()
 
     if !shortcuts_only
-        dev_version && println("\nUsing development version of SpmImage Tycoon.")
-        local_version && println("\nUsing local version of SpmImage Tycoon.")
+        if !(ver in ["main", "dev", "local", "superdev"])
+            println("Unknown version `$(ver)`. Using main version of SpmImage Tycoon.")
+            ver = "main"
+        end
+        (ver == "dev") && println("\nUsing the development version of SpmImage Tycoon.")
+        (ver == "local") && println("\nUsing the local version of SpmImage Tycoon.")
+        (ver == "superdev") && println("\nUsing the experimental version of SpmImage Tycoon. Very brave of you!")
         println("\nInstalling into directory \"$(dir_target)\".\nPlease have a beverage.\n")
 
-        errors_occured = wrapper_compile_app(dir_target, test_run=test_run, dev_version=dev_version, local_version=local_version, show_output=show_output)
+        errors_occured = wrapper_compile_app(dir_target, ver=ver, test_run=test, debug=debug)
     else
         errors_occured = false
     end
@@ -434,7 +444,7 @@ function install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=fals
             version_spmspectroscopy = TOML.parsefile(joinpath(get_package_dir("SpmSpectroscopy"), "Project.toml"))["version"]
         catch
         end
-        if show_output
+        if debug
             Pkg.activate()
         else
             redirect_stderr(devnull) do
@@ -449,7 +459,7 @@ function install(dir::String=""; test_run::Bool=false, shortcuts_only::Bool=fals
         "target" => dir_target,
         "version" => string(VERSION),
         "interactive" => interactive,
-        "dev_version" => dev_version,
+        "channel" => ver,
         "shortcuts" => data_shortcuts,
         "packages" => Dict{String,Any}(
             "SpmImageTycoon" => version_tycoon,
