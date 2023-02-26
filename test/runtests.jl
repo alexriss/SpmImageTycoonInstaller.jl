@@ -7,7 +7,7 @@ using Test
 
     out = Pipe()
     err = Pipe()
-    res = @capture_out install(;debug=true, interactive=false)
+    res = @capture_out install(;test=true, interactive=false)
     
     @test contains(res, "beverage")
 
@@ -20,7 +20,7 @@ using Test
     @test contains(res, "complete")
     @test contains(res, "Enjoy")
 
-    res = @capture_out install_shortcuts(;debug=true, interactive=false)
+    res = @capture_out install_shortcuts(;test=true, interactive=false)
 
     @test contains(res, "Start Menu")
     @test contains(res, "complete")
