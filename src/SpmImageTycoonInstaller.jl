@@ -430,7 +430,7 @@ function install(dir::String=""; ver::String="main", shortcuts_only::Bool=false,
     version_spmimages = "..."
     version_spmspectroscopy = "..."
     data_shortcuts = Dict{String,Any}("num" => length(shortcuts))
-    if test_run
+    if test
         if !errors_occured 
             data_shortcuts, err, err_full = add_shortcuts_sim(shortcuts)
         end
@@ -498,15 +498,15 @@ function install(dir::String=""; ver::String="main", shortcuts_only::Bool=false,
 end
 
 """
-    install_shortcuts(dir::String=""; test_run::Bool=false, interactive::Bool=true)::Nothing
+    install_shortcuts(dir::String=""; test::Bool=false, interactive::Bool=true)::Nothing
 
 Installs shortcuts for SpmImage Tycoon. Use this only if you installed the app before - otherwise the shortcuts won't work.
 
-If `test_run` is `true`, then installation will only be simulated and compilation will be skipped.
+If `test` is `true`, then installation will only be simulated and compilation will be skipped.
 If `interactive` is `false`, then the install will proceed without user interaction.
 """
-function install_shortcuts(dir::String=""; test_run::Bool=false, interactive::Bool=true)::Nothing
-    return install(dir, shortcuts_only=true, test_run=test_run, interactive=interactive)
+function install_shortcuts(dir::String=""; test::Bool=false, interactive::Bool=true)::Nothing
+    return install(dir, shortcuts_only=true, test=test, interactive=interactive)
 end
 
 
