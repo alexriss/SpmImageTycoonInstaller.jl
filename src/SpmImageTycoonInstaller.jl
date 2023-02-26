@@ -148,7 +148,6 @@ function copy_autohotkey(dir_source::String, dir_target::String)::Nothing
 
         map(files) do f
             if !endswith(f, autohotkey_ext_skip)
-                @show f, joinpath(d_target, f)
                 cp(f, joinpath(d_target, basename(f)), force=true)
             end
         end
