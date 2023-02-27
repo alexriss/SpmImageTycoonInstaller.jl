@@ -165,6 +165,34 @@ function copy_autohotkey(dir_source::String, dir_target::String)::Nothing
 end
 
 
+function make_delete_dir(dir_target::String)::Bool
+    res = true
+    while true
+        try
+            if !isdir(dir_target)
+                mkpath(dir_target)
+            else
+                i = 1
+                rm(dir_target, force=true, recursive=true)
+                isdir(dir_target) || break
+                (i == 1) && println()  # add a line break
+                i += 1
+            end
+        catch e  # can occur when directory is busy or no write privileges
+            err = sprint(showerror, e)
+            err_full = sprint(showerror, e, catch_backtrace())
+            print("\nCannot write to directory \"$(dir_target)\". Try again [Y/n]: ")
+            inp = lowercase(readline())
+            if inp == "n"
+                res = false
+                break
+            end
+        end
+    end
+    return res
+end
+
+
 """
     compile_app(dir_target::String; ver::String="main")::Tuple{String,String}
 
@@ -173,22 +201,6 @@ Runs the package compilation and returns an error message in case of an error.
 function compile_app(dir_target::String; ver::String="main")::Tuple{String,String}
     err = ""
     err_full = ""
-
-    if isdir(dir_target)
-        i = 1
-        while i <=5
-            try
-                rm(dir_target, force=true, recursive=true)
-            catch e  # can occur when directory is busy or no write privileges
-                err = sprint(showerror, e)
-                err_full = sprint(showerror, e, catch_backtrace())
-            end
-            isdir(dir_target) || break
-            sleep(1)
-            i += 1
-        end
-        i == 6 && return err, err_full
-    end
 
     if ver != "local"
         Pkg.activate(temp=true)
@@ -393,7 +405,7 @@ function install(dir::String=""; ver::String="main", shortcuts_only::Bool=false,
     println("\n")
 
     basic_checks(ver=ver, debug=debug) || return
-
+    
     dir_last = get_last_install_dir()
     if dir != ""
         dir_target = get_install_subdir(dir)
@@ -402,7 +414,7 @@ function install(dir::String=""; ver::String="main", shortcuts_only::Bool=false,
     else
         dir_target = get_default_install_dir()
     end
-
+    
     shortcuts = Set{Shortcuts}([ShortcutStart, ShortcutDesktop])
     if interactive
         dir_target = choose_install_dir(dir_target)
@@ -420,6 +432,8 @@ function install(dir::String=""; ver::String="main", shortcuts_only::Bool=false,
         (ver == "local") && println("\nUsing the local version of SpmImage Tycoon.")
         (ver == "superdev") && println("\nUsing the experimental version of SpmImage Tycoon. Very brave of you!")
         println("\nInstalling into directory \"$(dir_target)\".\nPlease have a beverage.\n")
+
+        make_delete_dir(dir_target) || return
 
         errors_occured = wrapper_compile_app(dir_target, ver=ver, test_run=test, debug=debug)
     else
