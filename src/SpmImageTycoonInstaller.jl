@@ -164,6 +164,11 @@ function copy_autohotkey(dir_source::String, dir_target::String)::Nothing
 end
 
 
+"""
+    make_delete_dir(dir_target::String)::Bool
+
+Creates or empties target directory. Returns `true` if successful.
+"""
 function make_delete_dir(dir_target::String)::Bool
     res = true
     while true
@@ -178,8 +183,8 @@ function make_delete_dir(dir_target::String)::Bool
                 i += 1
             end
         catch e  # can occur when directory is busy or no write privileges
-            err = sprint(showerror, e)
-            err_full = sprint(showerror, e, catch_backtrace())
+            # err = sprint(showerror, e)
+            # err_full = sprint(showerror, e, catch_backtrace())
             print("\nCannot write to directory \"$(dir_target)\". Try again [Y/n]: ")
             inp = lowercase(readline())
             if inp == "n"
