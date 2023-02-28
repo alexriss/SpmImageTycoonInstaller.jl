@@ -72,7 +72,7 @@ function choose_startmenu_shortcuts()::Set{Shortcuts}
     end
 
     if Sys.isapple()
-        pass # todo
+        # todo
     end
 
     return s
