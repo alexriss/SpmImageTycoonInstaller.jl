@@ -35,7 +35,7 @@ The same procedure can be used to update to the latest version.
 
 The compiled version will start fast, even on the first run.
 
-_Tested on Windows and Linux so far. If you are a Apple user and feel brave, give it a try._
+_Tested on Windows, Linux, and Apple so far. However, so far, for Apple no shortcuts/aliases are created._
 
 ## Demo
 
@@ -52,7 +52,8 @@ _Tested on Windows and Linux so far. If you are a Apple user and feel brave, giv
 
 ## Known issues
 
-So far, I have tested the installer on Windows 11, Ubuntu/WSL, as well as Manjaro 22, all using Julia 1.8.
+So far, I have tested the installer on Windows 11, Ubuntu/WSL, Manjaro 22, as well as macOS x86.
+Please make sure to use Julia 1.8.
 Installations worked well, except for certain configurations of Manjaro Linux.
 Here, the package compilation errored, likely related to [this bug](https://github.com/JuliaLang/PackageCompiler.jl/issues/16).
 As a workaround, install Julia via the [official binaries](https://julialang.org/downloads/) (instead of via the distro's package manager).
