@@ -28,7 +28,8 @@ win_startmenu_ahk_path::String = "SpmImage Tycoon.lnk"
 
 win_executable_path::String = "bin/SpmImageTycoon.exe"
 win_executable_path_dir::String = "bin"
-win_executable_ahk_path::String = joinpath(autohotkey_dir_target, "SpmImageTycoon.ahk")
+win_executable_ahk_path::String = joinpath(autohotkey_dir_target, "SpmImageTycoon_v1.ahk")
+win_executable_ahk_path_v2::String = joinpath(autohotkey_dir_target, "SpmImageTycoon.ahk")
 win_executable_ahk_path_dir::String = autohotkey_dir_target
 
 win_icon_path::String = "bin/SpmImageTycoon.ico"
@@ -84,22 +85,31 @@ end
 
 
 """
-    check_autohotkey()::Bool
+    check_autohotkey()::Int
 
-Checks if autohotkey is associated with the .ahk extension
+Checks if autohotkey is associated with the .ahk extension. Returns 0 if not, 1 if yes (v1), and 2 if yes (v2).
 """
-function check_autohotkey()::Bool
+function check_autohotkey()::Int
     if Sys.iswindows()
+        res = 0
         try
             redirect_stderr(devnull) do
-                _ = read(`cmd.exe /c assoc .ahk`, String);
+                assoc = read(`cmd.exe /c assoc .ahk`, String);
+                if split(strip(assoc), "=")[end] == "AutoHotkeyScript"
+                    ftype = read(`cmd.exe /c ftype AutoHotkeyScript`, String);
+                    if contains(strip(ftype), "AutoHotkeyUX.exe")
+                        res = 2
+                    else # v1
+                        res = 1
+                    end
+                end
             end
-            return true
+            return res
         catch
-            return false
+            return 0
         end
     end
-    return false
+    return 0
 end
 
 
@@ -178,14 +188,15 @@ end
 
 
 """
-    add_shortcut_win_ahk_startmenu(dir_target::String)::Dict{String,Any}
+    add_shortcut_win_ahk_startmenu(dir_target::String, ahk::Int)::Dict{String,Any}
 
 Adds startmenu shortcut in Windows to the Autohotkey script.
 """
-function add_shortcut_win_ahk_startmenu(dir_target::String)::Dict{String,Any}
+function add_shortcut_win_ahk_startmenu(dir_target::String, ahk::Int)::Dict{String,Any}
     d = replace(win_startmenu_dir, "{{ appdata }}" => ENV["APPDATA"])
     p = abspath(joinpath(d, win_startmenu_ahk_path))
-    return add_shortcut_win(dir_target, p, win_startmenu_ahk_name, win_icon_path, win_executable_ahk_path, win_executable_ahk_path_dir)
+    ahk_path = (ahk == 2) ? win_executable_ahk_path_v2 : win_executable_ahk_path
+    return add_shortcut_win(dir_target, p, win_startmenu_ahk_name, win_icon_path, ahk_path, win_executable_ahk_path_dir)
 end
 
 
@@ -203,13 +214,14 @@ end
 
 
 """
-    add_shortcut_win_ahk_desktop(dir_target::String)::Dict{String,Any}
+    add_shortcut_win_ahk_desktop(dir_target::String, ahk::Int)::Dict{String,Any}
 
 Adds desktop shortcut in Windows to the Autohotkey script.
 """
-function add_shortcut_win_ahk_desktop(dir_target::String)::Dict{String,Any}
+function add_shortcut_win_ahk_desktop(dir_target::String, ahk::Int)::Dict{String,Any}
     p = abspath(joinpath(win_desktop_dir, win_desktop_ahk_path))
-    return add_shortcut_win(dir_target, p, win_desktop_ahk_name, win_icon_path, win_executable_ahk_path, win_executable_ahk_path_dir)
+    ahk_path = (ahk == 2) ? win_executable_ahk_path_v2 : win_executable_ahk_path
+    return add_shortcut_win(dir_target, p, win_desktop_ahk_name, win_icon_path, ahk_path, win_executable_ahk_path_dir)
 end
 
 
@@ -229,16 +241,18 @@ function add_shortcuts(s::Set{Shortcuts}, dir_target::String)::Tuple{Dict{String
     err = ""
     err_full = ""
     try
-        ahk = false
+        ahk = 0
+        ahk_present = false
         if Sys.iswindows()
             ahk = check_autohotkey()
+            ahk_present = ahk > 0
         end
         if ShortcutStart in s
             println(@italic "Adding Start Menu shortcut.")
 
             if Sys.iswindows()
-                d["StartMenu"] = add_shortcut_win_startmenu(dir_target, autohotkey=ahk)
-                ahk && (d["StartMenu_AHK"] = add_shortcut_win_ahk_startmenu(dir_target))
+                d["StartMenu"] = add_shortcut_win_startmenu(dir_target, autohotkey=ahk_present)
+                ahk_present && (d["StartMenu_AHK"] = add_shortcut_win_ahk_startmenu(dir_target, ahk))
             end
             if Sys.islinux()
                 d["StartMenu"] = add_shortcut_linux_startmenu(dir_target)
@@ -249,8 +263,8 @@ function add_shortcuts(s::Set{Shortcuts}, dir_target::String)::Tuple{Dict{String
             println(@italic "Adding Desktop shortcut.")
 
             if Sys.iswindows()
-                d["Desktop"] = add_shortcut_win_desktop(dir_target, autohotkey=ahk)
-                ahk && (d["Desktop_AHK"] = add_shortcut_win_ahk_desktop(dir_target))
+                d["Desktop"] = add_shortcut_win_desktop(dir_target, autohotkey=ahk_present)
+                ahk_present && (d["Desktop_AHK"] = add_shortcut_win_ahk_desktop(dir_target, ahk))
             end
         end
     catch e
