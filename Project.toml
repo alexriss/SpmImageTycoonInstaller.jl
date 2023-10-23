@@ -13,7 +13,7 @@ TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 Term = "22787eb5-b846-44ae-b979-8e399b8463ab"
 
 [compat]
-PackageCompiler = "^2.1"
+PackageCompiler = "=2.1.9"
 Suppressor = "^0.2"
 Term = "^2.0"
 julia = "^1.8"
