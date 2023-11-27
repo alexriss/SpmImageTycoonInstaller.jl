@@ -52,7 +52,7 @@ _Tested on Windows, Linux, and MacOS. However, so far, on MacOS no shortcuts/ali
 
 ## Known issues
 
-Please make sure to use Julia 1.8 or 1.9. I have tested the installer on Windows 11, Ubuntu/WSL, Manjaro 22, as well as macOS x86.
+Please make sure to use Julia 1.9. I have tested the installer on Windows 11, Ubuntu/WSL, Manjaro 22, as well as macOS x86.
 Installations worked well, except for certain configurations of Manjaro Linux.
 Here, the package compilation errored, likely related to [this bug](https://github.com/JuliaLang/PackageCompiler.jl/issues/16).
 As a workaround, install Julia via the [official binaries](https://julialang.org/downloads/) (instead of via the distro's package manager).
@@ -82,6 +82,13 @@ If you use [SpmImage Tycoon](https://github.com/alexriss/SpmImageTycoon.jl) for 
 
 To get rid of the console window under Windows, you can install [AutoHotkey](https://www.autohotkey.com/).
 This will be automatically detected and extra Start Menu and Desktop will be made that start the app without the console window.
+
+You do not need to run the whole installation procedure again. It is enough to re-create the shortcuts:
+
+```julia
+using SpmImageTycoonInstaller
+install(shortcuts_only=true)
+```
 
 ## Get in touch and contribute
 
