@@ -52,7 +52,7 @@ _Tested on Windows, Linux, and MacOS. However, so far, on MacOS no shortcuts/ali
 
 ## Known issues
 
-Please make sure to use Julia 1.9. I have tested the installer on Windows 11, Ubuntu/WSL, Manjaro 22, as well as macOS x86.
+Please make sure to use Julia 1.9 or 1.10. I have tested the installer on Windows 11, Ubuntu/WSL, Manjaro 22, as well as macOS x86.
 Installations worked well, except for certain configurations of Manjaro Linux.
 Here, the package compilation errored, likely related to [this bug](https://github.com/JuliaLang/PackageCompiler.jl/issues/16).
 As a workaround, install Julia via the [official binaries](https://julialang.org/downloads/) (instead of via the distro's package manager).
