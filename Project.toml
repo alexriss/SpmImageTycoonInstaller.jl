@@ -16,7 +16,7 @@ Term = "22787eb5-b846-44ae-b979-8e399b8463ab"
 PackageCompiler = "=2.1.17"
 Suppressor = "^0.2"
 Term = "^2.0"
-julia = "^1.8"
+julia = "^1.9"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
