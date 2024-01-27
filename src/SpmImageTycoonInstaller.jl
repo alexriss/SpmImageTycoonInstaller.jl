@@ -227,7 +227,12 @@ function compile_app(dir_target::String; ver::String="main")::Tuple{String,Strin
 
     dir_source = get_package_dir()
     try
-        create_app(dir_source, dir_target, incremental=false, filter_stdlibs=true, include_lazy_artifacts=true, force=true)
+        create_app(dir_source, dir_target,
+            incremental=true,   # speeds up the compilation, but makes the app larger (the app is already large, so it is less than 5% increase)
+            filter_stdlibs=false,  # PackageCompiler 2.1.17 only works with this set to false, 2.1.9 worked with this set to true
+            include_lazy_artifacts=true,
+            force=true
+        )
         copy_icons(dir_source, dir_target)
         copy_autohotkey(dir_source, dir_target)
     catch e
