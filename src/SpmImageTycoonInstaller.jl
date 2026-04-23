@@ -231,7 +231,7 @@ function compile_app(dir_target::String; ver::String="main")::Tuple{String,Strin
             incremental=true,   # speeds up the compilation, but makes the app larger (the app is already large, so it is less than 5% increase)
             filter_stdlibs=false,  # PackageCompiler 2.1.17 only works with this set to false, 2.1.9 worked with this set to true
             include_lazy_artifacts=true,
-            force=true
+            force=true,
         )
         copy_icons(dir_source, dir_target)
         copy_autohotkey(dir_source, dir_target)
@@ -396,14 +396,14 @@ end
 
 
 """
-    install(dir::String=""; ver::String="main", shortcuts_only::Bool=false,
+    install(dir::String=""; ver::String="dev", shortcuts_only::Bool=false,
         interactive::Bool=true, debug::Bool=false, test::Bool=false)::Nothing
 
 Installs SpmImageTycoon.
 
 A specific directory can be directly given as `dir`.
 
-`ver` specifies the version to install: `"main"` (default), `"dev"` for the development version,
+`ver` specifies the version to install: `"main"`, `"dev"` (default) for the development version,
 `"local"` for the locally installed version of `SpmImageTycoon`.
 
 If `shortcuts_only` is  `true`. then only shortcuts will be installed - not the app itself (use this only if you installed the app before - otherwise the shortcuts won't work).
@@ -411,7 +411,7 @@ If `interactive` is `false`, then the install will proceed without user interact
 If 'debug' is `true`, then the behind-the-scenes output of the installation will be shown (instead of written to a log file).
 If `test` is `true`, then installation will only be simulated and compilation will be skipped.
 """
-function install(dir::String=""; ver::String="main", shortcuts_only::Bool=false,
+function install(dir::String=""; ver::String="dev", shortcuts_only::Bool=false,
         interactive::Bool=true, debug::Bool=false, test::Bool=false)::Nothing
     Term.Consoles.clear()
     println()
@@ -486,6 +486,7 @@ function install(dir::String=""; ver::String="main", shortcuts_only::Bool=false,
         "date_end" => Dates.now(),
         "target" => dir_target,
         "version" => string(VERSION),
+        "julia_version" => string(Base.VERSION),
         "interactive" => interactive,
         "channel" => ver,
         "shortcuts" => data_shortcuts,
